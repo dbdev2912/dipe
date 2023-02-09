@@ -7,10 +7,17 @@ const fs = require('fs');
 const partner = new Table('partner');
 
 router.get('/', (req, res) => {
-    partner.selectAll((result) => {
+    // partner.selectAll((result) => {
+    //     const ptr = result[0];
+    //     res.send({ partner: ptr })
+    // })
+
+    connector(`CALL GET_PARTNER()`, (result) => {
+        console.log(result);
         const ptr = result[0];
         res.send({ partner: ptr })
     })
+
 })
 
 router.post('/update', (req, res) => {

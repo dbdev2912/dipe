@@ -10,7 +10,7 @@ router.get(`/session`, (req, res) => {
 
 router.post(`/login`, (req, res) => {
     const { username, password } = req.body;
-    const accounts = new Table("accounts");
+    const accounts = new Table("accounts");    
     accounts.selectOne("account_string", username, ( result ) => {
         if(result.length > 0){
             const account = result[0]

@@ -8,6 +8,8 @@ const app = express()
 const auth = require('./routes/auth');
 const partner = require('./routes/partner');
 const database = require('./routes/database');
+const account = require('./routes/accounts');
+const page = require('./routes/page');
 
 /* middlewares */
 
@@ -38,8 +40,8 @@ app.get('/api/get/the/god/damn/api/key/with/ridiculous/long/url/string', (req, r
 app.use(`/api/${ unique_string }/auth`, auth.router);
 app.use(`/api/${ unique_string }/partner`, partner.router);
 app.use(`/api/${ unique_string }/database`, database.router);
-
-
+app.use(`/api/${ unique_string }/account`, account.router);
+app.use(`/api/${ unique_string }/page`, page.router);
 
 app.use((req, res, next) => {
     res.send(404, { msg: "404 not found" });
