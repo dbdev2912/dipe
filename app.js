@@ -1,7 +1,7 @@
 const express = require('express');
 const { cookie }  = require('./db/secret');
 
-// const { connector } = require('./db/connector.js');
+const { mongo } = require('./db/connector.js');
 const cors = require('cors');
 const app = express()
 
@@ -28,7 +28,15 @@ const { unique_string } = require('./unique_string');
 app.use( bodyParser.json({ limit: "50mb" }) );
 
 app.get('/', (req, res) => {
-    res.send({ msg: "Hello World" });
+    // res.send({ msg: "Hello World" });
+
+    mongo(( dbo ) => {
+        dbo.collection('test').find().toArray((err, result) => {
+            if (err) throw err;
+            res.send(result);
+        })
+    })
+
 })
 
 app.get('/api/get/the/god/damn/api/key/with/ridiculous/long/url/string', (req, res) => {

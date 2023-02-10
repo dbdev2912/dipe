@@ -1,3 +1,3 @@
 module.exports = {
-    unique_string: "ngonghinhnhilalunnhi"
+    unique_string: "hihi"
 }
