@@ -4,7 +4,7 @@ var conn = mysql.createConnection({
     host: "127.0.0.1",
     user: "moc",
     password: "root",
-    database: "mlcms"
+    database: "DIPE"
 
 });
 
@@ -13,7 +13,7 @@ const connectionString = "mongodb://127.0.0.1:27017/?directConnection=true&serve
 const dbName="mlcms";
 
 module.exports = {
-    connector: (query, callback) => {
+    mysql: (query, callback) => {
         conn.connect( () => {
             // try{
             //     conn.query(query, (err, result, fields) => {
@@ -23,6 +23,7 @@ module.exports = {
             // catch (err){
             //     callback([]);
             // }
+            // console.log("\nConnector.js at 26: " + query.slice(0, query.length / 4) + "..." + query.slice(query.length * 3 / 4, query.length ) )
             conn.query(query, (err, result, fields) => {
                 callback(result)
             })

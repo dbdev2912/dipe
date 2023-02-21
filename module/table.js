@@ -1,4 +1,4 @@
-const { connector } = require('../db/connector');
+const { mysql } = require('../db/connector');
 
 class Table {
     constructor( name ){

@@ -6,10 +6,8 @@ const cors = require('cors');
 const app = express()
 
 const auth = require('./routes/auth');
-const partner = require('./routes/partner');
-const database = require('./routes/database');
-const account = require('./routes/accounts');
-const page = require('./routes/page');
+const tables = require('./routes/tables-controller');
+const table = require('./routes/table-controller');
 
 /* middlewares */
 
@@ -46,10 +44,9 @@ app.get('/api/get/the/god/damn/api/key/with/ridiculous/long/url/string', (req, r
 /* ROUTING */
 
 app.use(`/api/${ unique_string }/auth`, auth.router);
-app.use(`/api/${ unique_string }/partner`, partner.router);
-app.use(`/api/${ unique_string }/database`, database.router);
-app.use(`/api/${ unique_string }/account`, account.router);
-app.use(`/api/${ unique_string }/page`, page.router);
+app.use(`/api/tables`, tables.router)
+app.use(`/api/table`, table.router)
+
 
 app.use((req, res, next) => {
     res.send(404, { msg: "404 not found" });
