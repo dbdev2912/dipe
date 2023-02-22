@@ -6,14 +6,15 @@ const { id } = require('../module/modulars');
 
 class TableController {
         constructor ( table_object ){
-            const { table_id, table_name, table_alias } = table_object;
+            const { table_id, table_name, table_alias, create_on } = table_object;
             this.table_id = table_id;
             this.table_name = table_name;
             this.table_alias = table_alias;
+            this.create_on = create_on
         }
         get = () => {
-            const { table_id, table_name, table_alias } = this;
-            return { table_id, table_name, table_alias }
+            const { table_id, table_name, table_alias, create_on } = this;
+            return { table_id, table_name, table_alias, create_on }
         }
 
         modify = (name, callback) => {
