@@ -27,7 +27,7 @@ class FieldController {
             if( success ){
                 /* THIS MAY BE GONNA CAUSE SOME BUGS BUT NEVER MIND */
             }
-            this.field_name = field_name;            
+            this.field_name = field_name;
             this.nullable = nullable;
             this.field_props = JSON.stringify(field_props);
             this.field_data_type = field_data_type;

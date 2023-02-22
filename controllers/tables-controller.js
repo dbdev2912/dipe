@@ -50,12 +50,14 @@ class TablesController {
             CALL table_add( "${table_name}", "${ table_alias }" );
         `;
         mysql( query, result =>{
-            const query = `
-                SELECT * FROM tables WHERE table_alias = '${table_alias}'
-            `
-            mysql( query, ( result ) => {
-                callback( {success: true, table: new TableController(result[0])} )
-            })
+            const { success, table_id } = result[0][0]
+
+            if( success ){
+                callback( {success: true, table: new TableController( { table_id, table_name, table_alias } )} )
+            }
+            else{
+                callback({ success: false })
+            }
         })
     }
     dropAllTables = ( callback ) => {

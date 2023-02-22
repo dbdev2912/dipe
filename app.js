@@ -8,6 +8,7 @@ const app = express()
 const auth = require('./routes/auth');
 const tables = require('./routes/tables-controller');
 const table = require('./routes/table-controller');
+const collection = require('./routes/collection');
 
 /* middlewares */
 
@@ -46,6 +47,7 @@ app.get('/api/get/the/god/damn/api/key/with/ridiculous/long/url/string', (req, r
 app.use(`/api/${ unique_string }/auth`, auth.router);
 app.use(`/api/tables`, tables.router)
 app.use(`/api/table`, table.router)
+app.use(`/api/collection`, collection.router)
 
 
 app.use((req, res, next) => {
