@@ -51,7 +51,9 @@ class TableController {
         }
         getField = ( field_id, callback ) => {
             const query = `
-                SELECT * FROM fields WHERE table_id = ${ this.table_id } AND field_id = ${ field_id }
+            SELECT * FROM fields AS F
+                INNER JOIN default_value AS D ON D.field_id = F.field_id
+            WHERE table_id = ${ this.table_id } AND F.field_id = ${ field_id }
             `;
             mysql( query, (result) => {
                 if( result.length > 0 ){
@@ -63,6 +65,7 @@ class TableController {
                 }
             })
         }
+
         createField = ( fieldRaw , callback) => {
             const { field_name, nullable, field_props, field_data_type, default_value } = fieldRaw;
             const field_alias = id(); /* This is supposed to be unique */
@@ -79,6 +82,7 @@ class TableController {
                 }
             })
         }
+
         getConstraints = (callback) => {
             const query = `
                 SELECT * FROM constraints WHERE field_id IN ( SELECT field_id FROM fields WHERE table_id = ${ this.table_id } );

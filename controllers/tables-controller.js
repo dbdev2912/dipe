@@ -33,14 +33,18 @@ class TablesController {
             SELECT * FROM tables WHERE ${ queryTailStringified }
         `;
         mysql( query, (result) => {
-            if( result.length > 1 ){
-                callback( { success: false, content: "YOUR CRITERIA RETURNS MORE THAN 1 RECORDS" } );
-            }
-            if( result.length === 0 ){
-                callback( { success: false, content: "YOUR CRITERIA RETURNS NO RECORDS" } );
-            }
-            if( result.length === 1 ){
-                callback( { success: true, table: new TableController( result[0] ) } );
+            if( result != undefined ){
+                if( result.length > 1 ){
+                    callback( { success: false, content: "YOUR CRITERIA RETURNS MORE THAN 1 RECORDS" } );
+                }
+                if( result.length === 0 ){
+                    callback( { success: false, content: "YOUR CRITERIA RETURNS NO RECORDS" } );
+                }
+                if( result.length === 1 ){
+                    callback( { success: true, table: new TableController( result[0] ) } );
+                }
+            }else{
+                callback( { success: false, content: "Something went wrong with your criterias" } );
             }
         })
     }
