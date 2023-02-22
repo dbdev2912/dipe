@@ -69,7 +69,5 @@ class TablesController {
         })
     }
 
-
-
 }
 module.exports = { TablesController }

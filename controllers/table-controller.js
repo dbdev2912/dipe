@@ -70,17 +70,10 @@ class TableController {
                 CALL add_field(${ this.table_id }, '${field_name}', '${field_alias}', ${nullable}, '${field_data_type}', '${JSON.stringify(field_props)}', '${ default_value }');
             `;
             mysql( query, (result) => {
-                const { success, content } = result[0][0];
+                const { success, content, field_id } = result[0][0];
                 if( success ){
-                    const query = `
-                        SELECT * FROM fields WHERE field_alias = '${ field_alias }'
-                    `;
-                    mysql( query, (result) => {
-                        const fieldRawData = result[0];
-                        const field = new FieldController( fieldRawData )
-
-                        callback( { success, field, content } )
-                    })
+                    const field = new FieldController( { ...fieldRaw, field_id } )
+                    callback( { success, field, content } )
                 }else{
                     callback({ success, content })
                 }
