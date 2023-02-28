@@ -110,7 +110,20 @@ END
 
  $$
 
+DROP PROCEDURE IF EXISTS `is_account_existed` $$
+CREATE PROCEDURE`is_account_existed` ( IN credential VARCHAR(255) )
+BEGIN
+	DECLARE user_existed INT;   
+    
+	SELECT COUNT(*) INTO user_existed FROM `accounts` WHERE `credential_string` = credential;
+    IF user_existed > 0 THEN 
+		SELECT TRUE AS `success`, CONCAT("ACCOUNT WITH CS: ", credential, " IS ALREADY EXISTED");        
+    ELSE
+		SELECT FALSE AS `success`, CONCAT("ACCOUNT WITH CS: ", credential, " IS NOT FOUND");
+    END IF;
+END
 
+ $$
 
 
 DELIMITER ;

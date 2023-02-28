@@ -4,6 +4,8 @@ const { cookie }  = require('./db/secret');
 const { mongo } = require('./db/connector.js');
 const cors = require('cors');
 const app = express()
+var url = require('url');
+
 
 const auth = require('./routes/auth');
 const tables = require('./routes/tables-controller');
@@ -51,7 +53,7 @@ app.use(`/api/collection`, collection.router)
 
 
 app.use((req, res, next) => {
-    res.send(404, { msg: "404 not found" });
+    res.send(200, { msg: `Current URL is: ${ req.url }` });
 })
 
 app.listen(5000, ()=>{
