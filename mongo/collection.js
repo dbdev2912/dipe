@@ -9,39 +9,37 @@ class Collection {
     constraintCheck = (data, constraints, index, is_passed, callback ) => {
         console.log(`Current Index: ${index}`)
         if( index === constraints.length ){
-            this.col.insertOne( data, ( err, result ) => {
-                callback({ success: true, content: `SUCCESSFULLY INSERTED NEW DATA `})
-            });
-        }else{
-            const constraint = constraints[index];
             if( !is_passed ){
                 callback({ success: false, content: `SOME DATA MET CONFLICT WITH DB DESIGN`  })
-            }else{
-                switch ( constraint.constraint_type ) {
-                    case "pk":
-                        console.log("PRIMARY KEY CONSTRAINT")
-                        // constraint.keys.map( key => { console.log( key.get() ) } )
-                        this.primaryConstraintsCheck( data, constraint, ( { success, content } ) => {
-                            if( success ){
-                                this.constraintCheck( data, constraints, index + 1, true, callback )
-                            }else{
-                                is_passed = false;
-                            }
-                        })
-                        break;
-                    case "fk":
-                        console.log(constraint.get())
-                        console.log("FOREIGN KEY CONSTRAINT")
-                        this.constraintCheck( data, constraints, index + 1, true, callback )
-                        break;
-                    default:
-                        console.log("OTHER CONSTRAINTs")
-                        this.constraintCheck( data, constraints, index + 1, true, callback )
-                        break;
+            }
+            else{
+                /* This is fuking final step */
+                callback({ success: true, content: `SUCCESSFULLY INSERTED NEW DATA `})
+            }
+        }else{
+            const constraint = constraints[index];
+            switch ( constraint.constraint_type ) {
+                case "pk":
+                    console.log("PRIMARY KEY CONSTRAINT")
+                    // constraint.keys.map( key => { console.log( key.get() ) } )
+                    this.primaryConstraintsCheck( data, constraint, ( { passed, key } ) => {
+                        if( passed ){
+                            this.constraintCheck( data, constraints, index + 1, true, callback )
+                        }else{
+                            this.constraintCheck( data, constraints, constraints.length, false, callback )
+                        }
+                    })
+                    break;
+                case "fk":
+                    console.log(constraint.get())
+                    console.log("FOREIGN KEY CONSTRAINT")
+                    this.constraintCheck( data, constraints, index + 1, true, callback )
+                    break;
+                default:
+                    console.log("OTHER CONSTRAINTs")
+                    this.constraintCheck( data, constraints, index + 1, true, callback )
+                    break;
 
-                }
-                /* check here */
-                /* if check faild, set is_passed to false then break the recursion */
             }
         }
     }
@@ -66,18 +64,24 @@ class Collection {
     primaryConstraintsCheck = ( data, constraint, callback ) => {
         const { keys } = constraint;
         this.getKeysAndValueFromConstraint( data, keys, 0, {}, true, ({ passed, key }) => {
-            console.log({ passed, key })
+            /* query database and fuking check if data is already existed or not */
             callback({ passed, key })
         })
     }
 
     insert = (data, rawConstraints, callback ) => {
-
         const primaries = rawConstraints.filter( constraint => constraint.constraint_type === "pk" );
         const foreigns  = rawConstraints.filter( constraint => constraint.constraint_type === "fk" );
         const constraints = [ { constraint_type: "pk", keys: primaries }, ...foreigns ];
 
         this.constraintCheck(data, constraints, 0, true, callback)
+    }
+
+
+    insertPureData = ( data, callback ) => {
+        this.col.insertOne( data, ( err, result ) => {
+            callback({ success: true, content: "SUCCESSFULLY INSERTED NEW DATA" })
+        });
     }
 
     findAll = (callback ) => {

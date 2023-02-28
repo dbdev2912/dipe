@@ -191,7 +191,13 @@ class TableController {
                     }else{
                         const collection = new Collection( col );
                         collection.insert( data, constraints, ({ success, content })=> {
-                            callback( {success, content} )
+                            if( success ){
+                                collection.insertPureData( data, ({ success, content }) => {
+                                    callback( {success, content} )
+                                })
+                            }else{
+                                callback( {success, content} )
+                            }
                         } )
                     }
                 })

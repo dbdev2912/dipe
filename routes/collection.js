@@ -8,12 +8,10 @@ router.post('/', (req, res) => {
     const tables = new TablesController();
     const { table_id } = req.body;
 
-    const { table_18_id_alias,
-            id1677468440939,
-            id1677468455577,
-            id1677468623631,
-            id1677468745340,
-            id1677468875879, } = req.body
+    const {   table_5_id_alias,
+        id1677557257140,
+        id1677557295505,
+    } = req.body
 
     const criteria = [{
         field: "table_id",
@@ -26,12 +24,9 @@ router.post('/', (req, res) => {
     tables.getone( criteria, ({ success, table, content }) => {
         if( success ){
             table.insert(
-                {   table_18_id_alias,
-                    id1677468440939,
-                    id1677468455577,
-                    id1677468623631,
-                    id1677468745340,
-                    id1677468875879
+                {   table_5_id_alias,
+                    id1677557257140,
+                    id1677557295505,
                 },
                     ({ success, content })=> {
                     res.send(200, { success, content })
