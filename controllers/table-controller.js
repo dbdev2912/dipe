@@ -1,7 +1,7 @@
-const { mysql } = require('../db/connector');
+const { mysql, mongo } = require('../db/connector');
 const { FieldController } = require("./field-controller");
 const { ConstraintController } = require("./constraint-controller");
-
+const { Collection } = require('../mongo/collection');
 const { id } = require('../module/modulars');
 
 class TableController {
@@ -124,7 +124,7 @@ class TableController {
             check_on_field,
             default_check_value
             }, callback ) => {
-
+            /* FIELD MUST BE BELONGS TO THIS TABLE, not fixed */
             const query = `
                 CALL add_constraint('${constraint_type}', ${ field_id }, '${ reference_on ? reference_on: -1 }', '${ check_fomular }', ${ check_on_field }, '${ default_check_value ? default_check_value: "NULL" }');
             `;
@@ -147,6 +147,94 @@ class TableController {
             })
         }
 
+        /* INSERT DATA TO MONGODB */
+
+        connect = ( callback ) => {
+            mongo( dbo => {
+                const col = dbo.collection( this.table_alias );
+                callback({ success: true, col });
+            })
+        }
+
+        find = (criteria, callback) => {
+            this.connect( ({ success, col }) => {
+                if( !success ){
+                    callback( { success, content: `Failed to connect to collection: ${ this.table_name }` } )
+                }else{
+                    const collection = new Collection( col );
+                    collection.find( criteria, ({ success, content, data }) => {
+                        callback( {success, content, data} )
+                    })
+                }
+            })
+        }
+
+        findAll = (callback) => {
+            this.connect( ({ success, col }) => {
+                if( !success ){
+                    callback( { success, content: `Failed to connect to collection: ${ this.table_name }` } )
+                }else{
+                    const collection = new Collection( col );
+                    collection.findAll( ({ success, content, data })=> {
+                        callback( {success, content, data} )
+                    })
+                }
+            })
+        }
+
+        insert = ( data, callback ) => {
+            this.getConstraints( ({ success, constraints }) => {
+                this.connect( ({ success, col }) => {
+                    if( !success ){
+                        callback( { success, content: `Failed to connect to collection: ${ this.table_name }` } )
+                    }else{
+                        const collection = new Collection( col );
+                        collection.insert( data, constraints, ({ success, content })=> {
+                            callback( {success, content} )
+                        } )
+                    }
+                })
+            })
+        }
+
+        update = (criteria, newValue, callback) => {
+            this.connect( ({ success, col }) => {
+                if( !success ){
+                    callback( { success, content: `Failed to connect to collection: ${ this.table_name }` } )
+                }else{
+                    const collection = new Collection( col );
+                    collection.update( criteria, newValue, ({ success, content, data })=> {
+                        callback( {success, content, data} )
+                    })
+                }
+            })
+        }
+
+        delete = (criteria, callback) => {
+            this.connect( ({ success, col }) => {
+                if( !success ){
+                    callback( { success, content: `Failed to connect to collection: ${ this.table_name }` } )
+                }else{
+                    const collection = new Collection( col );
+                    collection.delete( criteria, ({ success, content, data })=> {
+                        callback( {success, content, data} )
+                    })
+                }
+            })
+        }
+
+        deleteAll = (callback) => {
+            this.connect( ({ success, col }) => {
+                if( !success ){
+                    callback( { success, content: `Failed to connect to collection: ${ this.table_name }` } )
+                }else{
+                    const collection = new Collection( col );
+                    collection.deleteAll( ({ success, content, data })=> {
+                        callback( {success, content, data} )
+                    })
+                }
+            })
+        }
 
 }
 module.exports = { TableController }

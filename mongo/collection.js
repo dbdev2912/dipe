@@ -1,98 +1,79 @@
 const { mongo } = require('../db/connector');
 const { TablesController } = require('../controllers/tables-controller');
+
 class Collection {
-    constructor( name ) {
-        this.collectionName = name;
+    constructor( col ) {
+        this.col = col
     }
 
-    connect = ( callback ) => {
-        const tables = new TablesController();
-        const criteria = [{
-            field: "table_alias",
-            fomula: "=",
-            value: this.collectionName
-        }]
-        tables.getone( criteria, ( { success, content, table } ) => {
-            if( !success ){
-                callback({ success, content, col: null })
+    constraintCheck = (data, constraints, index, is_passed, callback ) => {
+        console.log(`Current Index: ${index}`)
+        if( index === constraints.length ){
+            this.col.insertOne( data, ( err, result ) => {
+                callback({ success: true, content: `SUCCESSFULLY INSERTED NEW DATA `})
+            });
+        }else{
+            const constraint = constraints[index];
+            if( !is_passed ){
+                callback({ success: false, content: `SOME DATA MET CONFLICT WITH DB DESIGN`  })
             }else{
-                mongo( dbo => {
-                    const col = dbo.collection( this.collectionName );
-                    callback({ success, col });
-                })
+                switch ( constraint.constraint_type ) {
+                    case "pk":
+                        console.log("PRIMARY KEY CONSTRAINT")
+                        constraint.keys.map( key => { console.log( key.get() ) } )
+                        this.constraintCheck( data, constraints, index + 1, true, callback )
+                        break;
+                    case "fk":
+                        console.log(constraint.get())
+                        console.log("FOREIGN KEY CONSTRAINT")
+                        this.constraintCheck( data, constraints, index + 1, true, callback )
+                        break;
+                    default:
+                        console.log("OTHER CONSTRAINTs")
+                        this.constraintCheck( data, constraints, index + 1, true, callback )
+                        break;
+
+                }
+                /* check here */
+                /* if check faild, set is_passed to false then break the recursion */
             }
+        }
+    }
+
+    insert = (data, rawConstraints, callback ) => {
+
+        const primaries = rawConstraints.filter( constraint => constraint.constraint_type === "pk" );
+        const foreigns  = rawConstraints.filter( constraint => constraint.constraint_type === "fk" );
+        const constraints = [ { constraint_type: "pk", keys: primaries }, ...foreigns ];
+
+        this.constraintCheck(data, constraints, 0, true, callback)
+    }
+
+    findAll = (callback ) => {
+        this.col.find().toArray( (err, result) => {
+            callback( { content: `SUCCESSFULLY RETRIEVED ALL DATA `, data: result } )
+        })
+    }
+    find = (criteria, callback ) => {
+        this.col.find( criteria ).toArray( (err, result) => {
+            callback( { content: `SUCCESSFULLY RETRIEVED DATA `,data: result } )
         })
     }
 
-    insert = ( data, callback ) => {
-
-        this.connect( ({ success, col, content }) => {
-            if( !success ){
-                callback( { success, content } )
-            }else{
-                /* apply constraint here */
-                col.insertOne( data, ( err, result ) => {
-                    callback( { success, content: `SUCCESSFULLY INSERT NEW DATA INTO ${ this.collectionName }`  } )
-                });
-            }
+    update = (criteria, newValue, callback ) => {
+        this.col.update( criteria, { $set: { ...newValue } }, ( err, result ) =>  {
+            callback( {  content: `SUCCESSFULLY UPDATED DATA` }  )
         })
     }
 
-    findAll = ( callback ) => {
-        this.connect( ({ success, col, content }) => {
-            if( !success ){
-                callback( { success, content } )
-            }else{
-                col.find().toArray( (err, result) => {
-                    callback( { success, content: `SUCCESSFULLY RETRIEVE ALL DATA FROM ${ this.collectionName }`,data: result } )
-                })
-            }
+    deleteAll = ( callback ) => {
+        this.col.deleteMany((err, result) => {
+            callback( { content: `SUCCESSFULLY DELETED ALL DATA `,data: result } )
         })
     }
-    find = ( criteria, callback ) => {
-        this.connect( ({ success, col, content }) => {
-            if( !success ){
-                callback( { success, content } )
-            }else{
-                col.find( criteria ).toArray( (err, result) => {
-                    callback( { success, content: `SUCCESSFULLY RETRIEVE DATA FROM ${ this.collectionName }`,data: result } )
-                })
-            }
-        })
-    }
-
-    update = ( criteria, newValue ) => {
-        this.connect( ({ success, col, content }) => {
-            if( !success ){
-                callback( { success, content } )
-            }else{
-                col.update( criteria, { $set: { ...newValue } }, ( err, result ) =>  {
-                    callback( callback( { success, content: `SUCCESSFULLY UPDATE DATA ON ${ this.collectionName }` } ) )
-                })
-            }
-        })
-    }
-
-    deleteAll = () => {
-        this.connect( ({ success, col, content }) => {
-            if( !success ){
-                callback( { success, content } )
-            }else{
-                col.deleteMany((err, result) => {
-                    callback( { success, content: `SUCCESSFULLY DELETE ALL DATA FROM ${ this.collectionName }`,data: result } )
-                })
-            }
-        })
-    }
-    delete = ( criteria ) => {
-        this.connect( ({ success, col, content }) => {
-            if( !success ){
-                callback( { success, content } )
-            }else{
-                col.delete(criteria, (err, result) => {
-                    callback( { success, content: `SUCCESSFULLY DATA FROM ${ this.collectionName }` } )
-                })
-            }
+    delete = ( criteria, callback ) => {
+        this.col.remove(criteria, (err, result) => {
+            callback( { content: `SUCCESSFULLY DELETED DATA ` } )
         })
     }
 }

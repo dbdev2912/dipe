@@ -6,7 +6,7 @@ const { id } = require('../module/modulars');
 class TablesController {
 
     constructor () {
-
+        
     }
 
     getall = ( callback ) => {
