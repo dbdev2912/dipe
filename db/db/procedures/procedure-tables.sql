@@ -12,7 +12,7 @@ BEGIN
         
 		/* TRIGGER IS GONNA BE CALLED SOON */
         
-		SELECT TRUE AS `success`, CONCAT("SUCCESSFULLY CREATE TABLE ", in_table_name) AS `content`; 
+		SELECT TRUE AS `success`, CONCAT("SUCCESSFULLY CREATE TABLE ", in_table_name) AS `content`, LAST_INSERT_ID() as table_id;
 	ELSE 
 		SELECT FALSE AS `success`, CONCAT("TABLE WITH ALIAS ", in_table_alias, " ALREADY EXISTED") AS `content`; 
     END IF;

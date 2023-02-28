@@ -18,7 +18,12 @@ CREATE TABLE `account_detail`(
     phone 		VARCHAR(255),
     address 	TEXT
 );
-ALTER TABLE `account_detail` ADD CONSTRAINT `fk_account_accountdetail` FOREIGN KEY (credential_string) REFERENCES accounts( credential_string ) ON UPDATE CASCADE;
+
+
+ALTER TABLE `account_detail` ADD CONSTRAINT `fk_account_accountdetail` 
+	FOREIGN KEY (credential_string) 
+		REFERENCES accounts( credential_string ) ON UPDATE CASCADE;
+
 
 CREATE TABLE `tables`(
 	table_id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -45,8 +50,6 @@ CREATE TABLE `default_value`(
 ALTER TABLE `fields` ADD CONSTRAINT `fk_fields_table` FOREIGN KEY ( `table_id` ) REFERENCES `tables`(`table_id`) ON UPDATE CASCADE ON DELETE CASCADE;
 ALTER TABLE `default_value` ADD CONSTRAINT `fk_field_default_value` FOREIGN KEY ( `field_id` ) REFERENCES `fields`(`field_id`) ON UPDATE CASCADE;
 
-
-/* NO PROCEDURES OR TRIGGERS */
 CREATE TABLE `constraints`(
 	constraint_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
     constraint_type ENUM("pk", "fk", "check"),

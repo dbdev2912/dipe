@@ -11,5 +11,4 @@ USE DIPE;
 -- CALL `add_field`(1, "Đơn vị đến", "DVD", FALSE, "VARCHAR", '{"LENGTH": "255" }', "Bao" );
 -- CALL `add_field`(1, "Nhà sản xuất", "NSX", FALSE, "INT", NULL, ""); 
 -- CALL `modify_field`( 2, "MASP",  TRUE,  "VARCHAR", '{"length": "255"}', "" );
-
 -- CALL drop_field(9);

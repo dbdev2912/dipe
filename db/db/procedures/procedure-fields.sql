@@ -29,7 +29,7 @@ BEGIN
 			END IF;
 			SELECT field_id INTO filtered_field_id FROM `fields` WHERE field_alias = in_field_alias;
 			INSERT INTO `default_value`(`field_id`, `default_value`) VALUES( filtered_field_id, in_default_value );        
-			SELECT TRUE AS `success`, CONCAT("SUCCESSFULLY ADD AND INSERT DEFAULT VALUE OF ", in_default_value, " ON FIELD ", in_field_name) AS `content`;
+			SELECT TRUE AS `success`, CONCAT("SUCCESSFULLY ADD AND INSERT DEFAULT VALUE OF ", in_default_value, " ON FIELD ", in_field_name) AS `content`, LAST_INSERT_ID() AS field_id;
 
 	ELSE
 		SELECT FALSE AS `success`, CONCAT("NO TABLE WITH ID ", in_table_id, " IS FOUND!") AS `content`;
