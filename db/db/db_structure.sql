@@ -27,10 +27,13 @@ ALTER TABLE `account_detail` ADD CONSTRAINT `fk_account_accountdetail`
 
 CREATE TABLE `tables`(
 	table_id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+    credential_string VARCHAR(255) NOT NULL,
     table_name VARCHAR(255) DEFAULT "Bảng mới",
     table_alias VARCHAR(255) NOT NULL UNIQUE ,
     create_on DATETIME DEFAULT NOW()
 );
+
+ALTER TABLE `tables` ADD CONSTRAINT `fk_acc_tables` FOREIGN KEY ( `credential_string` ) REFERENCES `accounts`( `credential_string` ) ON UPDATE CASCADE;
 
 CREATE TABLE `fields`(
 	field_id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,

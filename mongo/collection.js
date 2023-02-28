@@ -20,8 +20,14 @@ class Collection {
                 switch ( constraint.constraint_type ) {
                     case "pk":
                         console.log("PRIMARY KEY CONSTRAINT")
-                        constraint.keys.map( key => { console.log( key.get() ) } )
-                        this.constraintCheck( data, constraints, index + 1, true, callback )
+                        // constraint.keys.map( key => { console.log( key.get() ) } )
+                        this.primaryConstraintsCheck( constraint, ( { success, content } ) => {
+                            if( success ){
+                                this.constraintCheck( data, constraints, index + 1, true, callback )
+                            }else{
+                                is_passed = false;
+                            }
+                        })
                         break;
                     case "fk":
                         console.log(constraint.get())

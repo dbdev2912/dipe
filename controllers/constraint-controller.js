@@ -61,5 +61,19 @@ class ConstraintController {
             callback(result[0]);
         })
     }
+
+    getFieldAlias = ( callback ) => {
+        const query = `
+            SELECT field_alias FROM fields WHERE field_id = ${ this.field_id }
+        `;
+        mysql( query, result => {
+            if( result.length > 0 ){
+                const { field_alias } = result[0];
+                callback({ success: true, field_alias })
+            }else{
+                callback({ success: false })
+            }
+        })
+    }
 }
 module.exports = { ConstraintController }
