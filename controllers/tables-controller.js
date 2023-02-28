@@ -22,6 +22,21 @@ class TablesController {
             }
         })
     }
+
+    getAllUsingCredentialString = ( credential_string ,callback ) => {
+        const query = `
+            SELECT * FROM TABLES WHERE credential_string = '${ credential_string }';
+        `;
+        mysql( query, ( result ) =>  {
+            if( result.length == 0 ){
+                callback({ success: false })
+            }else{
+                const tables = result.map( table => new TableController( table ) )
+                callback( { success: true, tables } )
+            }
+        })
+    }
+
     getone = ( criterias, callback ) => {
         // criteria form like { field: "field", value: "value", fomula: "=><<>" }
         const queryTail = criterias.map( criteria => {
@@ -53,7 +68,6 @@ class TablesController {
         const query = `
             CALL table_add( "${table_name}", "${ credential_string }", "${ table_alias }" );
         `;
-        console.log(query)
         mysql( query, result =>{
             const { success, table_id } = result[0][0]
 
