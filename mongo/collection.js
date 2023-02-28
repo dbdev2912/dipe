@@ -21,7 +21,7 @@ class Collection {
                     case "pk":
                         console.log("PRIMARY KEY CONSTRAINT")
                         // constraint.keys.map( key => { console.log( key.get() ) } )
-                        this.primaryConstraintsCheck( constraint, ( { success, content } ) => {
+                        this.primaryConstraintsCheck( data, constraint, ( { success, content } ) => {
                             if( success ){
                                 this.constraintCheck( data, constraints, index + 1, true, callback )
                             }else{
@@ -44,6 +44,31 @@ class Collection {
                 /* if check faild, set is_passed to false then break the recursion */
             }
         }
+    }
+
+    getKeysAndValueFromConstraint = ( data, constraints, index, key, passed, callback ) => {
+        if( index === constraints.length ){
+            callback({ passed, key });
+        }else{
+            const constraint = constraints[index];
+            constraint.getFieldAlias(({ success, field_alias }) => {
+                if( !success ){
+                    this.getKeysAndValueFromConstraint( data, constraints, constraints.length, key, false, callback )
+                }else{
+                    key[field_alias] = data[field_alias]
+                    this.getKeysAndValueFromConstraint( data, constraints, index + 1, key, passed, callback )
+                }
+            })
+        }
+    }
+
+
+    primaryConstraintsCheck = ( data, constraint, callback ) => {
+        const { keys } = constraint;
+        this.getKeysAndValueFromConstraint( data, keys, 0, {}, true, ({ passed, key }) => {
+            console.log({ passed, key })
+            callback({ passed, key })
+        })
     }
 
     insert = (data, rawConstraints, callback ) => {

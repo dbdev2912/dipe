@@ -6,7 +6,7 @@ const { id } = require('../module/modulars');
 class TablesController {
 
     constructor () {
-        
+
     }
 
     getall = ( callback ) => {
@@ -48,16 +48,16 @@ class TablesController {
             }
         })
     }
-    createTable = (table_name, callback) => {
+    createTable = ({ table_name, credential_string }, callback) => {
         const table_alias = id();
         const query = `
-            CALL table_add( "${table_name}", "${ table_alias }" );
+            CALL table_add( "${table_name}", "${ credential_string }", "${ table_alias }" );
         `;
         mysql( query, result =>{
             const { success, table_id } = result[0][0]
 
             if( success ){
-                callback( {success: true, table: new TableController( { table_id, table_name, table_alias } )} )
+                callback( {success: true, table: new TableController( { table_id, table_name, table_alias } )} ) /* Small bug need not to be hurry */
             }
             else{
                 callback({ success: false })
