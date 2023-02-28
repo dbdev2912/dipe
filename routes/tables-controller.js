@@ -35,8 +35,8 @@ router.get('/table/:table_id', (req, res) => {
 
 router.post('/', (req, res) => {
     const Tables = new TablesController();
-    const { table_name } = req.body;
-    Tables.createTable( table_name, credential_string, ({ success, table }) => {
+    const { table_name, credential_string } = req.body;
+    Tables.createTable( { table_name, credential_string }, ({ success, table }) => {
         if( success ){
             res.send(200, { table: table.get() })
         }
