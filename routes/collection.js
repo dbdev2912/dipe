@@ -8,9 +8,11 @@ router.post('/', (req, res) => {
     const tables = new TablesController();
     const { table_id } = req.body;
 
-    const {   table_5_id_alias,
-        id1677557257140,
-        id1677557295505,
+    const {
+        id1677567100002,
+        id1677567219038,
+        id1677567242452,
+        id1677567285759,
     } = req.body
 
     const criteria = [{
@@ -19,14 +21,17 @@ router.post('/', (req, res) => {
         fomula: "="
     }]
 
+
     /* Works but not optimized yet */
 
     tables.getone( criteria, ({ success, table, content }) => {
         if( success ){
             table.insert(
-                {   table_5_id_alias,
-                    id1677557257140,
-                    id1677557295505,
+                {
+                    id1677567100002,
+                    id1677567219038,
+                    id1677567242452,
+                    id1677567285759,
                 },
                     ({ success, content })=> {
                     res.send(200, { success, content })

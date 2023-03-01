@@ -68,7 +68,7 @@ class ConstraintController {
         `;
         mysql( query, result => {
             if( result.length > 0 ){
-                const { field_alias } = result[0];
+                const { field_alias } = result[0];                
                 callback({ success: true, field_alias })
             }else{
                 callback({ success: false })

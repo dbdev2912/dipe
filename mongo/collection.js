@@ -8,38 +8,45 @@ class Collection {
 
     constraintCheck = (data, constraints, index, is_passed, callback ) => {
         console.log(`Current Index: ${index}`)
-        if( index === constraints.length ){
-            if( !is_passed ){
-                callback({ success: false, content: `SOME DATA MET CONFLICT WITH DB DESIGN`  })
-            }
-            else{
+        if( !is_passed ){
+            callback({ success: false, content: `SOME DATA MET CONFLICT WITH DB DESIGN`  })
+        }
+        else{
+            if( index === constraints.length ){
                 /* This is fuking final step */
                 callback({ success: true, content: `SUCCESSFULLY INSERTED NEW DATA `})
             }
-        }else{
-            const constraint = constraints[index];
-            switch ( constraint.constraint_type ) {
-                case "pk":
-                    console.log("PRIMARY KEY CONSTRAINT")
-                    // constraint.keys.map( key => { console.log( key.get() ) } )
-                    this.primaryConstraintsCheck( data, constraint, ( { passed, key } ) => {
-                        if( passed ){
-                            this.constraintCheck( data, constraints, index + 1, true, callback )
-                        }else{
-                            this.constraintCheck( data, constraints, constraints.length, false, callback )
-                        }
-                    })
-                    break;
-                case "fk":
-                    console.log(constraint.get())
-                    console.log("FOREIGN KEY CONSTRAINT")
-                    this.constraintCheck( data, constraints, index + 1, true, callback )
-                    break;
-                default:
-                    console.log("OTHER CONSTRAINTs")
-                    this.constraintCheck( data, constraints, index + 1, true, callback )
-                    break;
+            else{
+                const constraint = constraints[index];
+                switch ( constraint.constraint_type ) {
+                    case "pk":
+                        // constraint.keys.map( key => { console.log( key.get() ) } )
+                        console.log("PK CONSTRAINT")
+                        this.primaryConstraintsCheck( data, constraint, ( { passed } ) => {
+                            if( passed ){
+                                this.constraintCheck( data, constraints, index + 1, true, callback )
+                            }else{
+                                this.constraintCheck( data, constraints, index + 1, false, callback )
+                            }
+                        })
+                        break;
+                    case "fk":
+                        console.log("FK CONSTRAINT")
+                        this.foreignKeyConstraintCheck( data, constraint, ({ passed }) => {
+                            if( passed ){
+                                this.constraintCheck( data, constraints, index + 1, true, callback )
+                            }else{
+                                this.constraintCheck( data, constraints, index + 1, false, callback )
+                            }
+                        })
 
+                        break;
+                    default:
+                        console.log("OTHER CONSTRAINTs")
+                        this.constraintCheck( data, constraints, index + 1, true, callback )
+                        break;
+
+                }
             }
         }
     }
@@ -51,7 +58,7 @@ class Collection {
             const constraint = constraints[index];
             constraint.getFieldAlias(({ success, field_alias }) => {
                 if( !success ){
-                    this.getKeysAndValueFromConstraint( data, constraints, constraints.length, key, false, callback )
+                    this.getKeysAndValueFromConstraint( data, constraints, index + 1, key, false, callback )
                 }else{
                     key[field_alias] = data[field_alias]
                     this.getKeysAndValueFromConstraint( data, constraints, index + 1, key, passed, callback )
@@ -63,9 +70,29 @@ class Collection {
 
     primaryConstraintsCheck = ( data, constraint, callback ) => {
         const { keys } = constraint;
+
         this.getKeysAndValueFromConstraint( data, keys, 0, {}, true, ({ passed, key }) => {
+            this.col.find(key).toArray((err, result) => {                
+                if( result.length > 0 ){
+                    callback({ passed: false })
+                }else{
+                    callback({ passed: true })
+                }
+            })
             /* query database and fuking check if data is already existed or not */
-            callback({ passed, key })
+        })
+    }
+
+    foreignKeyConstraintCheck = ( data, constraint, callback ) => {
+        const keys = [ constraint ]
+        this.getKeysAndValueFromConstraint( data, keys, 0, {}, true, ({ passed, key }) => {
+            this.col.find(key).toArray((err, result) => {
+                if( result.length > 0 ){
+                    callback({ passed: false })
+                }else{0
+                    callback({ passed: true })
+                }
+            })
         })
     }
 

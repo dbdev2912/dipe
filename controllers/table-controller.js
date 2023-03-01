@@ -28,13 +28,14 @@ class TableController {
                 callback( {success: true, table: this} );
             })
         }
-        drop = () => {
+        drop = (callback) => {
             const query = `
                 CALL drop_table(${ this.table_id })
             `;
             mysql( query, (result) => {
                 callback(result[0]);
             })
+            /* Constraint check remain */
             /* Final test */
         }
         getFields = ( callback ) => {
@@ -191,7 +192,7 @@ class TableController {
                     }else{
                         const collection = new Collection( col );
                         collection.insert( data, constraints, ({ success, content })=> {
-                            if( success ){
+                            if( success ){                                
                                 collection.insertPureData( data, ({ success, content }) => {
                                     callback( {success, content} )
                                 })
