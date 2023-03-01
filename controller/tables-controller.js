@@ -62,7 +62,7 @@ class TablesController {
         const query = `
             CALL table_add( "${table_name}", "${ credential_string }", "${ table_alias }" );
         `;
-        console.log(query);
+        // console.log(query);
         mysql( query, result =>{
             const { success, table_id } = result[0][0]
 
