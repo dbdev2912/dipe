@@ -26,7 +26,14 @@ const connection = mysql.createConnection({
 // Đăng ký tài khoản người dùng mới
 router.post('/create_user', async (req, res) => {
   const { account_string, pwd_string} = req.body;
-
+ if(account_string ==="")
+ {
+  return res.status(409).json({ success:false,content: 'Tai khoản rỗng' });
+ } 
+ if (pwd_string===""){
+  return res.status(409).json({ success:false,content: 'Mật khẩu rỗng' });
+ }
+ else{
   // Kiểm tra xem tài khoản đã tồn tại hay chưa
   const [existingUser] = await connection.promise().query(
     'SELECT * FROM accounts WHERE account_string = ?',
@@ -51,6 +58,8 @@ router.post('/create_user', async (req, res) => {
   );
 
   res.status(201).json({success:true, content: 'Tài khoản đã được tạo thành công' });
+
+ }
 });
 
 // Đăng nhập tài khoản người dùng

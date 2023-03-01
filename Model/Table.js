@@ -14,10 +14,10 @@ var Table={
     getOne:function(callback){
 
     },
-	table_add:function({table_name},callback){
+	table_add:function({table_name,credential_string},callback){
         
         return db.query(`
-            CALL table_add('${ table_name }','${ "tablealias"+ (new Date()).getTime() }')
+            CALL table_add('${ table_name }', '${ credential_string}','${ "tablealias"+ (new Date()).getTime() }')
         `,callback);
     },
     table_modify:function({table_id,table_name},callback){
@@ -32,3 +32,4 @@ var Table={
     },
 };
  module.exports=Table;
+ 

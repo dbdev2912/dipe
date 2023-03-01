@@ -22,6 +22,19 @@ class TablesController {
             }
         })
     }
+    getAllUsingCredentialString = ( credential_string ,callback ) => {
+        const query = `
+            SELECT * FROM TABLES WHERE credential_string = '${ credential_string }';
+        `;
+        mysql( query, ( result ) =>  {
+            if( result.length == 0 ){
+                callback({ success: false })
+            }else{
+                const tables = result.map( table => new TableController( table ) )
+                callback( { success: true, tables } )
+            }
+        })
+    }
     getone = ( criterias, callback ) => {
         // criteria form like { field: "field", value: "value", fomula: "=><<>" }
         const queryTail = criterias.map( criteria => {
@@ -44,16 +57,17 @@ class TablesController {
             }
         })
     }
-    createTable = (table_name, callback) => {
+    createTable = ({ table_name, credential_string }, callback) => {
         const table_alias = id();
         const query = `
-            CALL table_add( "${table_name}", "${ table_alias }" );
+            CALL table_add( "${table_name}", "${ credential_string }", "${ table_alias }" );
         `;
+        console.log(query);
         mysql( query, result =>{
             const { success, table_id } = result[0][0]
 
             if( success ){
-                callback( {success: true, table: new TableController( { table_id, table_name, table_alias } )} )
+                callback( {success: true, table: new TableController( { table_id, table_name, table_alias, credential_string } )} ) /* Small bug need not to be hurry */
             }
             else{
                 callback({ success: false })

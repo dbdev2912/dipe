@@ -41,7 +41,7 @@ class FieldController {
         `;
         mysql( query, (result) => {
             const { success, content } = result[0];
-            callback({ success, msg })
+            callback({ success, content })
         })
     }
 

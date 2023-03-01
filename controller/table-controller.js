@@ -6,15 +6,16 @@ const { id } = require('../module/modulars');
 
 class TableController {
         constructor ( table_object ){
-            const { table_id, table_name, table_alias, create_on} = table_object;
+            const { table_id, table_name, table_alias, create_on,credential_string} = table_object;
             this.table_id = table_id;
             this.table_name = table_name;
             this.table_alias = table_alias;
             this.create_on = create_on;
+            this.credential_string = credential_string;
         }
         get = () => {
-            const { table_id, table_name, table_alias, create_on } = this;
-            return { table_id, table_name, table_alias, create_on }
+            const { table_id, table_name, table_alias, create_on,credential_string } = this;
+            return { table_id, table_name, table_alias, create_on,credential_string }
         }
 
         modify = (name, callback) => {
@@ -27,7 +28,7 @@ class TableController {
                 callback( {success: true, table: this} );
             })
         }
-        drop = () => {
+        drop = (callback) => {
             const query = `
                 CALL drop_table(${ this.table_id })
             `;

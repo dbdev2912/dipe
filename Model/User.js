@@ -12,13 +12,22 @@ var Login ={
     // },
 
     getAllUser:function(callback){
-		return db.query("Select * from accounts",callback);
+		return db.query(`
+            SELECT * FROM ACCOUNTS AS A INNER JOIN ACCOUNT_DETAIL AS D ON A.credential_string = D.credential_string
+        
+        `,callback);
 	},
 
     getUserById:function(credential_string,callback){
 		return db.query("select * from accounts where credential_string=?",[credential_string],callback);
 	},
+    getUser_detail:function(credential_string, callback){
+        const query = `
+        SELECT * FROM ACCOUNTS AS A INNER JOIN ACCOUNT_DETAIL AS D ON A.credential_string = D.credential_string where D.credential_string ='${ credential_string}'
+    `;
 
+		return db.query(query,callback);
+	},
     // addUser:function({account_string, pwd_string},callback){
     //  const role = "admin";
   
@@ -44,11 +53,12 @@ var Login ={
         return db.query (`
         CALL user_change_info('${ credential_string}' ,'${fullname}','${email}','${phone}','${address }');
         `,callback);
-    }
-
-
-
-
+    },
+    delete_user:function({credential_string},callback){
+        return db.query(`
+        call is_account_existed('${credential_string}') 
+        `,callback);
+    },
 };
 
  module.exports=Login;
