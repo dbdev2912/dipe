@@ -192,7 +192,7 @@ class TableController {
                     }else{
                         const collection = new Collection( col );
                         collection.insert( data, constraints, ({ success, content })=> {
-                            if( success ){                                
+                            if( success ){
                                 collection.insertPureData( data, ({ success, content }) => {
                                     callback( {success, content} )
                                 })
@@ -205,16 +205,19 @@ class TableController {
             })
         }
 
-        update = (criteria, newValue, callback) => {
-            this.connect( ({ success, col }) => {
-                if( !success ){
-                    callback( { success, content: `Failed to connect to collection: ${ this.table_name }` } )
-                }else{
-                    const collection = new Collection( col );
-                    collection.update( criteria, newValue, ({ success, content, data })=> {
-                        callback( {success, content, data} )
-                    })
-                }
+        update = (oldValue, newValue, callback) => {
+            this.getConstraints( ({ success, constraints }) => {
+                this.connect( ({ success, col }) => {
+                    if( !success ){
+                        callback( { success, content: `Failed to connect to collection: ${ this.table_name }` } )
+                    }else{
+                        const collection = new Collection( col );
+                        collection.updateChangeCheck( constraints, oldValue, newValue, ({ changes })=> {
+                            console.log(changes)
+                            callback({ success: true })
+                        })
+                    }
+                })
             })
         }
 

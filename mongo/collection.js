@@ -72,7 +72,7 @@ class Collection {
         const { keys } = constraint;
 
         this.getKeysAndValueFromConstraint( data, keys, 0, {}, true, ({ passed, key }) => {
-            this.col.find(key).toArray((err, result) => {                
+            this.col.find(key).toArray((err, result) => {
                 if( result.length > 0 ){
                     callback({ passed: false })
                 }else{
@@ -100,7 +100,7 @@ class Collection {
         const primaries = rawConstraints.filter( constraint => constraint.constraint_type === "pk" );
         const foreigns  = rawConstraints.filter( constraint => constraint.constraint_type === "fk" );
         const constraints = [ { constraint_type: "pk", keys: primaries }, ...foreigns ];
-
+        /* Type check */
         this.constraintCheck(data, constraints, 0, true, callback)
     }
 
@@ -122,8 +122,72 @@ class Collection {
         })
     }
 
+    primaryKeysChangeDetect = ( oldValue, newValue, keys, index, changed, callback ) => {
+        if( index === keys.length ){
+            callback( { changed } )
+        }else{
+            const constraint = keys[index]
+            constraint.getFieldAlias( ({ success, field_alias }) => {
+                if( oldValue[field_alias] != newValue[field_alias] ){
+                    changed = true
+                }
+                this.primaryKeysChangeDetect( oldValue, newValue, keys, index + 1, changed, callback )
+            })
+        }
+    }
+
+    keysChangeCheck = ( constraints, oldValue, newValue, index, changes, callback ) => {
+        if( index === constraints.length ){
+            callback( { changes } )
+        }else{
+            const constraint = constraints[index];
+            switch (constraint.constraint_type) {
+                case "pk":
+                    const { keys } = constraint;
+                    this.primaryKeysChangeDetect( oldValue, newValue, keys, 0, false, ({ changed }) => {
+                        if( changed ){
+                            changes.push( { type: "pk" } )
+                        }
+                        this.keysChangeCheck( constraints, oldValue, newValue, index + 1, changes, callback )
+                    })
+                    break;
+                case "fk":
+                    constraint.getFieldAlias( ({ success, field_alias }) => {
+                        if( oldValue[field_alias] != newValue[field_alias] ){
+                            changes.push({
+                                type: "fk",
+                                field_id: constraint.field_id
+                            })
+                        }
+                        this.keysChangeCheck( constraints, oldValue, newValue, index + 1, changes, callback )
+                    })
+                    break;
+
+                default:
+                    break
+
+            }
+        }
+    }
+
+    updateChangeCheck = ( rawConstraints, oldValue, newValue, callback ) => {
+        const primaries = rawConstraints.filter( constraint => constraint.constraint_type === "pk" );
+        const foreigns  = rawConstraints.filter( constraint => constraint.constraint_type === "fk" );
+        const constraints = [ { constraint_type: "pk", keys: primaries }, ...foreigns ];
+
+        this.keysChangeCheck( constraints, oldValue, newValue, 0, [], callback )
+    }
+
     update = (criteria, newValue, callback ) => {
         this.col.update( criteria, { $set: { ...newValue } }, ( err, result ) =>  {
+
+
+
+            /*
+                Foreign key update
+                Type check update
+            */
+
             callback( {  content: `SUCCESSFULLY UPDATED DATA` }  )
         })
     }

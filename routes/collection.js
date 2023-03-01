@@ -93,15 +93,13 @@ router.get('/:table_id/:makh', (req, res) => {
 })
 
 
-router.put('/:table_id/:makh', (req, res) => {
+router.put('/:table_id', (req, res) => {
     const tables = new TablesController();
-    const { table_id, makh } = req.params;
+    const { table_id } = req.params;
 
     const {
-        id1677050436301,
-        id1677050476779,
-        id1677050525226,
-        id1677050560301,
+        oldValue,
+        newValue
     } = req.body
 
     const criteria = [{
@@ -114,12 +112,7 @@ router.put('/:table_id/:makh', (req, res) => {
 
     tables.getone( criteria, ({ success, table, content }) => {
         if( success ){
-            table.update( { id1677050416272: makh }, {
-                id1677050436301,
-                id1677050476779,
-                id1677050525226,
-                id1677050560301,
-            } ,({ success, content, data })=> {
+            table.update(  oldValue, newValue ,({ success, content, data })=> {
                 res.send(200, { success, content, data })
             })
         }else{
