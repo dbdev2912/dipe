@@ -1,8 +1,8 @@
 export default [
-    { id: 1, name: "INT", type: "int", props: [] },
-    { id: 2, name: "INT UNSIGNED", type: "int", props: []},
-    { id: 3, name: "BIG INT", type: "int", props: [] },
-    { id: 4, name: "BIG INT UNSIGNED", type: "int", props: []},
+    { id: 1, name: "INT", type: "int", props: [{ name: "AUTO_INCREMENT", type: "BOOL" }] },
+    { id: 2, name: "INT UNSIGNED", type: "int", props: [{ name: "AUTO_INCREMENT", type: "BOOL" }]},
+    { id: 3, name: "BIG INT", type: "int", props: [{ name: "AUTO_INCREMENT", type: "BOOL" }] },
+    { id: 4, name: "BIG INT UNSIGNED", type: "int", props: [{ name: "AUTO_INCREMENT", type: "BOOL" }]},
     { id: 5, name: "BOOL", type: "bool", props: [] },
     { id: 6, name: "DECIMAL", type: "floating-point",
         props: [ { name: "LENGTH", type: "int" }, { name: "DELIMITER", type: "int" } ] }, /* dec(5,2) ~ 999.99 */

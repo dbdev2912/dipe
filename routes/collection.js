@@ -6,14 +6,7 @@ const { TablesController } = require( '../controllers/tables-controller' );
 
 router.post('/', (req, res) => {
     const tables = new TablesController();
-    const { table_id } = req.body;
-
-    const {
-        id1677567100002,
-        id1677567219038,
-        id1677567242452,
-        id1677567285759,
-    } = req.body
+    const { table_id, data } = req.body;
 
     const criteria = [{
         field: "table_id",
@@ -22,17 +15,26 @@ router.post('/', (req, res) => {
     }]
 
 
+    // {
+    //     "table_id": 8,
+    //     "data": {
+    //         "id1677567100002": "1",
+    //         "id1677567219038": "SP02",
+    //         "id1677567242452": 12,
+    //         "id1677567285759": 12.39
+    //     }
+    // }
+
+
+
+
+
     /* Works but not optimized yet */
 
     tables.getone( criteria, ({ success, table, content }) => {
         if( success ){
             table.insert(
-                {
-                    id1677567100002,
-                    id1677567219038,
-                    id1677567242452,
-                    id1677567285759,
-                },
+                data,
                     ({ success, content })=> {
                     res.send(200, { success, content })
                 }
@@ -112,8 +114,8 @@ router.put('/:table_id', (req, res) => {
 
     tables.getone( criteria, ({ success, table, content }) => {
         if( success ){
-            table.update(  oldValue, newValue ,({ success, content, data })=> {
-                res.send(200, { success, content, data })
+            table.update(  oldValue, newValue ,({ success, context })=> {
+                res.send(200, { success, context })
             })
         }else{
             res.send(404, { content })

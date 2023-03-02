@@ -1,5 +1,4 @@
 const { mysql }= require('../db/connector');
-
 class FieldController {
     constructor( field_object ){
         const { field_id, field_name, field_alias, nullable, field_props, field_data_type, default_value } = field_object;
@@ -60,9 +59,7 @@ class FieldController {
         mysql( query, (result) => {
             const { success, content, id } = result[0][0];
             if( success ){
-                this.getConstraint( id, ({ success, constraint }) => {
-                    callback( { success, constraint } )
-                })
+                callback( { success, id, content } )
             }
         })
     }

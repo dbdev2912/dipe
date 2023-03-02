@@ -1,5 +1,6 @@
-const { mongo } = require('../db/connector');
+const { mongo, mysql } = require('../db/connector');
 const { TablesController } = require('../controllers/tables-controller');
+const { TableController } = require('../controllers/table-controller');
 
 class Collection {
     constructor( col ) {
@@ -7,7 +8,6 @@ class Collection {
     }
 
     constraintCheck = (data, constraints, index, is_passed, callback ) => {
-        console.log(`Current Index: ${index}`)
         if( !is_passed ){
             callback({ success: false, content: `SOME DATA MET CONFLICT WITH DB DESIGN`  })
         }
@@ -21,7 +21,6 @@ class Collection {
                 switch ( constraint.constraint_type ) {
                     case "pk":
                         // constraint.keys.map( key => { console.log( key.get() ) } )
-                        console.log("PK CONSTRAINT")
                         this.primaryConstraintsCheck( data, constraint, ( { passed } ) => {
                             if( passed ){
                                 this.constraintCheck( data, constraints, index + 1, true, callback )
@@ -31,7 +30,6 @@ class Collection {
                         })
                         break;
                     case "fk":
-                        console.log("FK CONSTRAINT")
                         this.foreignKeyConstraintCheck( data, constraint, ({ passed }) => {
                             if( passed ){
                                 this.constraintCheck( data, constraints, index + 1, true, callback )
@@ -86,12 +84,47 @@ class Collection {
     foreignKeyConstraintCheck = ( data, constraint, callback ) => {
         const keys = [ constraint ]
         this.getKeysAndValueFromConstraint( data, keys, 0, {}, true, ({ passed, key }) => {
-            this.col.find(key).toArray((err, result) => {
-                if( result.length > 0 ){
-                    callback({ passed: false })
-                }else{0
-                    callback({ passed: true })
-                }
+            /* Check on origin no table !!! */
+            const field_alias =  Object.keys(key)[0]
+            const query = `
+            SELECT table_alias FROM TABLES WHERE TABLE_ID IN
+            (
+                SELECT TABLE_ID FROM FIELDS WHERE FIELD_ID IN
+                (
+                    SELECT REFERENCE_ON FROM CONSTRAINTS WHERE FIELD_ID IN
+                    (
+                        SELECT FIELD_ID FROM FIELDS WHERE FIELD_ALIAS = '${ field_alias }'
+                    )
+                )
+            )
+            `;
+            mysql(query, (result) => {
+                const { table_alias } = result[0];
+                const query = `
+                    SELECT field_alias FROM FIELDS WHERE FIELD_ID IN
+                    (
+                        SELECT REFERENCE_ON FROM CONSTRAINTS WHERE FIELD_ID IN
+                        (
+                            SELECT FIELD_ID FROM FIELDS WHERE FIELD_ALIAS = '${ field_alias }'
+                        )
+                    )
+                `;
+
+                mysql(query, (result) => {
+                    const f_alias = result[0].field_alias;
+                    const query = {};
+                    query[ f_alias ] = key[ field_alias ];
+
+                    mongo( (dbo) => {
+                        dbo.collection( table_alias ).find(query).toArray((err, result) => {
+                            if( result.length > 0 ){
+                                callback({ passed: true })
+                            }else{0
+                                callback({ passed: false })
+                            }
+                        })
+                    })
+                })
             })
         })
     }
@@ -176,6 +209,59 @@ class Collection {
         const constraints = [ { constraint_type: "pk", keys: primaries }, ...foreigns ];
 
         this.keysChangeCheck( constraints, oldValue, newValue, 0, [], callback )
+    }
+
+    synchronizingEverySinglePK = ( primaries, index, callback ) => {
+        if( index === primaries.length ){
+            callback({ success: true })
+        }else{
+            const pk = primaries[index];
+            const query = `
+                SELECT table_alias, field_alias
+                FROM tables AS T
+                    INNER JOIN fields AS F ON F.table_id = T.table_id
+                WHERE field_id IN (
+                    SELECT FIELD_ID FROM constraints WHERE reference_on = ${ pk.field_id }
+                )
+            `;
+            mysql( query, (result) => {
+                console.log(result);
+                this.synchronizingEverySinglePK( primaries, index + 1, callback )
+            })
+        }
+    }
+
+    synchronizePrimaryData = ( constraints, changes, oldValue, newValue, callback ) =>{
+        const primariesChange = changes.filter( change => change.type === "pk" );
+        const primaries = constraints.filter( constraint => constraint.constraint_type === "pk" );
+        if( primariesChange.length > 0 ){
+            this.constraintCheck(newValue, [{ constraint_type: "pk", keys: primaries }], 0, true, ({ success, content }) => {
+                console.log( "222 :",  { success, content } )
+                this.synchronizingEverySinglePK( primaries, 0, ({success}) => {
+                    callback( { success, content: "Primary key cascading updated" } )
+                })
+                /* synchronizing data here */
+            })
+        }else{
+            callback( { success: false, content: "No primary key conflict found" } )
+        }
+    }
+
+    synchronizeForeignData = ( constraints, changes, oldValue, newValue, callback ) =>{
+        const foreignsChange = changes.filter( change => change.type === "fk" );
+        const foreigns  = constraints.filter( constraint => constraint.constraint_type === "fk" );
+
+        if( foreignsChange.length > 0 ){
+            this.constraintCheck(newValue, foreigns, 0, true, ({ success, content }) => {
+                console.log("239 ", { success, content } )
+
+                /* foreign key synchronizing data */
+
+                callback( { success, content } )
+            })
+        }else{
+            callback( { success: false, content: "No primary key conflict found" } )
+        }
     }
 
     update = (criteria, newValue, callback ) => {

@@ -212,9 +212,20 @@ class TableController {
                         callback( { success, content: `Failed to connect to collection: ${ this.table_name }` } )
                     }else{
                         const collection = new Collection( col );
-                        collection.updateChangeCheck( constraints, oldValue, newValue, ({ changes })=> {
-                            console.log(changes)
-                            callback({ success: true })
+                        collection.updateChangeCheck( constraints, oldValue, newValue, ({ changes })=> {                            
+                            if( changes.length > 0 ){
+                                const context = {  }
+                                collection.synchronizePrimaryData( constraints, changes, oldValue, newValue, ({ success, content }) => {
+                                    context["pk"] = { success, content }
+                                    collection.synchronizeForeignData( constraints, changes, oldValue, newValue, ({ success, content }) => {
+                                        context["fk"] = { success, content }
+                                        callback({ success: true, context })
+                                    })
+                                    // callback({ success: true, content: "Updated after synchronizing data" })
+                                })
+                            }else{
+                                callback({ success: true, content: "Directly update data without synchronizing data" })
+                            }
                         })
                     }
                 })
