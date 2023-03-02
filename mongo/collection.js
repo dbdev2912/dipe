@@ -225,7 +225,9 @@ class Collection {
                 )
             `;
             mysql( query, (result) => {
-                console.log(result);
+                /*
+                    Recursive and synchronize data
+                */
                 this.synchronizingEverySinglePK( primaries, index + 1, callback )
             })
         }
