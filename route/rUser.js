@@ -82,8 +82,6 @@ router.put('/changeInfo', async (req, res) => {
         }
     });
 })
-
-
 router.delete('/delete/:credential_string?', async (req, res) => {
     const { credential_string } = req.params;
     User.delete_user(req.params, function (err, result) {

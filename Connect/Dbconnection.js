@@ -9,7 +9,6 @@ connection.connect(function(err) {
     if (err) {
       console.log('Not connect.');
     }else{
-      console.log('Port sử  dụng là ' + process.env.DB_HOST)
        console.log('Connected to the MySQL server.');
     }
   });

@@ -3,14 +3,15 @@ var app = express();
 const cors = require("cors");
 var bodyparser = require('body-parser');
 const { unique_string } = require('./unique_string');
-
+const morgan = require('morgan');
 require('dotenv').config();
 app.use(bodyparser.urlencoded({extended: true}));
 app.use(bodyparser.json());
-  
+app.use(morgan('combined'));
 // var connection = require('./Connect/Dbconnection');
 const logger = require('./route/logs');
-app.use(logger);
+// app.use(logger);
+
 var login = require('./route/rLogin');
 var user = require('./route/rUser');
 var table = require('./route/table/rTable');
@@ -43,11 +44,9 @@ app.use(`/api/${ unique_string }/user`,user);
 
 app.use(`/api/${ unique_string }/tables`, tables.router)
 app.use(`/api/${ unique_string }/table`, table.router)
-// const mysql = require('mysql2');
-// const bcrypt = require('bcrypt');
-// const jwt = require('jsonwebtoken');
 
-var server = app.listen(process.env.PORT || 3000, function() {
+
+var server = app.listen(process.env.PORT, function() {
   console.log('Server listening on port ' + server.address().port);
   });
 

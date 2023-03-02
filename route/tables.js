@@ -5,14 +5,12 @@ const { TablesController } = require('../controller/tables-controller');
 
 //@route GET api/${ unique_string }/tables/getall
 //@desc Xem tất cả các bảng
-//@access Public
+
 router.get('/getall', (req, res) => {
     const Tables = new TablesController();
     Tables.getall(({ success, tables }) => {
         if (success) {
-           
             res.status(200).json({ success: true, content: "Thành công", data: tables });
-
         } else {
             res.status(500).json({ success: false, content: "Thất bại" });
         }
@@ -20,10 +18,10 @@ router.get('/getall', (req, res) => {
 })
 //@route GET api/${ unique_string }/tables/getall_credential/:credential_string
 //@desc Xem tất cả các bảng theo credentials_string
-//@access Public
+
 router.get('/getall_credential/:credential_string', (req, res) => {
     const credential_string = req.params.credential_string
-        const Tables = new TablesController();
+    const Tables = new TablesController();
     Tables.getAllUsingCredentialString(credential_string, ({ success, tables }) => {
         if (success) {
             const data = tables.map(table => table.get());
@@ -47,7 +45,7 @@ router.get('/getall_credential/:credential_string', (req, res) => {
 // });
 //@route GET api/${ unique_string }/tables/table/:table_id
 //@desc Xem tất cả các bảng theo table_id
-//@access Public
+
 router.get('/table/:table_id', (req, res) => {
     const Tables = new TablesController();
 
@@ -66,11 +64,11 @@ router.get('/table/:table_id', (req, res) => {
 })
 //@route POST api/${ unique_string }/tables/create
 //@desc Tạo bảng mới
-//@access Public
+
 router.post('/create', (req, res) => {
     const Tables = new TablesController();
     const { table_name, credential_string } = req.body;
-    Tables.createTable({table_name, credential_string}, ({ success, table }) => {
+    Tables.createTable({ table_name, credential_string }, ({ success, table }) => {
         if (success) {
             res.status(200).json({ success: true, content: "Thêm bảng thành công", data: table });
         }
@@ -91,7 +89,7 @@ router.put('/modify', function (req, res) {
     }]
     Tables.getone(criteria, ({ success, table }) => {
         if (success) {
-            table.modify(table_name,({ success }) => {
+            table.modify(table_name, ({ success }) => {
                 res.send({ success: true, content: "Sửa bảng thành công " })
             })
         } else {
@@ -113,10 +111,10 @@ router.delete('/drop/:table_id', (req, res) => {
     Tables.getone(criteria, ({ success, table }) => {
         if (success) {
             table.drop(({ success }) => {
-                res.send({ success: true, content: "Xóa bảng thành công " })
+                res.status(200).send({ success: true, content: "Xóa bảng thành công" })
             })
         } else {
-            res.send({ success: false, content: `Không tìm thấy bảng có ID: ${table_id}` })
+            res.status(404).send({ success: false, content: `Không tìm thấy bảng có ID: ${table_id}` })
         }
     })
 })
@@ -131,5 +129,4 @@ router.delete('/delete/all', (req, res) => {
         }
     })
 })
-
 module.exports = { router }
