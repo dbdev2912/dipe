@@ -26,7 +26,11 @@ const { ConstraintController } = require("../controller/constraint-controller")
 //         }
 //     })
 // })
-///Xem tất cả trường của bảng có id là table_id
+
+//@route GET api/${ unique_string }/table/:table_id/fields
+//@desc Xem tất cả trường của bảng có id là table_id
+//@access Public
+
 router.get('/:table_id/fields', (req, res) => {
     const { table_id } = req.params;
     console.log(table_id)
@@ -112,10 +116,12 @@ router.post('/create/field_constraint', (req, res) => {
                         check_fomular,
                         check_on_field,              /*---*/
                         default_check_value
-                    }, ({ success, constraint }) => {
-                        res.send({ success: true, content: "Thành công", data: constraint.get() })
+                    }, ({ success, id }) => {
+                        table.getConstraint(id, ({ success, constraint }) => {
+                            res.status(200).json({ success: true, content: "Thêm thành công", data: field, constraint });
+                        })
                     })
-                    res.status(200).json({ success: true, content: "Thêm thành công", data: field, constraint });
+
                 } else {
                     res.status(500).json({ success: true, content: "Thất bại" });
                 }
@@ -250,26 +256,26 @@ router.delete('/dropall/constraints', (req, res) => {
     })
 })
 ///// xóa bảng
-router.delete('/drop/:table_id', (req, res) => {
+// router.delete('/drop/:table_id', (req, res) => {
 
-    const { table_id } = req.params;
+//     const { table_id } = req.params;
 
-    const Tables = new TablesController();
-    const criteria = [{
-        field: "table_id",
-        value: table_id,
-        fomula: "="
-    }]
-    Tables.getone(criteria, ({ success, table }) => {
-        if (success) {
-            table.drop(({ success }) => {
-                res.send({ success: true, content: "Xóa thành công " })
-            })
-        } else {
-            res.send({ success: false, content: `Không tìm thấy bảng có ID: ${table_id}` })
-        }
-    })
-})
+//     const Tables = new TablesController();
+//     const criteria = [{
+//         field: "table_id",
+//         value: table_id,
+//         fomula: "="
+//     }]
+//     Tables.getone(criteria, ({ success, table }) => {
+//         if (success) {
+//             table.drop(({ success }) => {
+//                 res.send({ success: true, content: "Xóa thành công " })
+//             })
+//         } else {
+//             res.send({ success: false, content: `Không tìm thấy bảng có ID: ${table_id}` })
+//         }
+//     })
+// })
 
 ///// Xóa ràng 1 buộcc
 router.delete('/drop_id/constraints', (req, res) => {
@@ -286,13 +292,16 @@ router.delete('/drop_id/constraints', (req, res) => {
             table.getConstraint(constraint_id, ({ success, constraint }) => {
                 if (!success) {
                     res.send({ success: false, content: "Không thấy mã ràng buộc" });
+                } else {
+                    constraint.drop(({ success, content }) => {
+                        // console.log(success, content);
+                        if (success) {
+                            res.send({ success: true, content: "Xóa ràng buộc thành công" })
+                        } else {
+                            res.send({ success: false, content: "Xóa ràng buộc thất bại" });
+                        }
+                    });
                 }
-                constraint.drop(({ success, content }) => {
-                    if (success) {
-                        res.send({ success: true, content: "Xóa ràng buộc thành công" })
-                    }
-                    res.send({ success: false, content: "Xóa ràng buộc thất bại" });
-                });
             })
         } else {
             res.send({ success: false, content: "Không tìm thấy bảng" })
@@ -350,6 +359,53 @@ router.put('/modify/field', (req, res) => {
         field_props,
         field_data_type,
         default_value
+    } = req.body;
+
+    const Tables = new TablesController();
+    const criteria = [{
+        field: "table_id",
+        value: table_id,
+        fomula: "="
+    }]
+    Tables.getone(criteria, ({ success, table }) => {
+        if (success) {
+            table.getField(field_id, ({ success, field }) => {
+                if (success) {
+                    field.modify({
+                        field_name,
+                        nullable,
+                        field_props,
+                        field_data_type,
+                        default_value
+                    }, ({ success, content, field }) => {
+                        res.send(200, { success: true, content: "Thành công", field: field.get() })
+                    })
+                } else {
+                    res.send(404, { success: false, content: `Không tìm thấy trường có ID: ${field_id} ` })
+                }
+            })
+        } else {
+            res.send({ success: false, content: `Không tìm thấy bảng có ID: ${table_id} ` })
+        }
+    })
+})
+
+//thay đổi thông tin trường + ràng buộc
+router.put('/modify/field', (req, res) => {
+    const { table_id } = req.body;
+    const {
+        field_id,
+        field_name,
+        nullable,
+        field_props,
+        field_data_type,
+        default_value,
+        constraint_id,
+        constraint_type,
+        reference_on,
+        check_fomular,
+        check_on_field,
+        default_check_value
     } = req.body;
 
     const Tables = new TablesController();

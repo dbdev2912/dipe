@@ -1,5 +1,5 @@
 const { mysql } = require('../Connect/conect');
-
+const ConstraintController = require('../controller/constraint-controller');
 class FieldController {
     constructor( field_object ){
         const { field_id, field_name, field_alias, nullable, field_props, field_data_type, default_value } = field_object;
@@ -56,14 +56,10 @@ class FieldController {
         const query = `
             CALL add_constraint('${constraint_type}', ${ this.field_id }, '${ reference_on ? reference_on: -1 }', '${ check_fomular }', ${ check_on_field }, '${ default_check_value ? default_check_value: "NULL" }');
         `;
-
+        // console.log(query)
         mysql( query, (result) => {
             const { success, content, id } = result[0][0];
-            if( success ){
-                this.getConstraint( id, ({ success, constraint }) => {
-                    callback( { success, constraint } )
-                })
-            }
+            callback( { success, content, id } )
         })
     }
 

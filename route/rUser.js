@@ -18,7 +18,6 @@ router.get('/getall/:credential_string?', function (req, res) {
         } catch (error) {
             return res.status(500).json({ success: false, content: "Không tìm thấy!" });
         }
-
     } else {
         User.getAllUser(function (err, rows) {
             if (err) {

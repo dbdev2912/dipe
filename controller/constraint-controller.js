@@ -57,7 +57,7 @@ class ConstraintController {
             CALL drop_constraint(${ this.constraint_id })
         `
         mysql( query, result => {
-            callback(result[0]);
+            callback(result[0][0]);
         })
     }
 }
