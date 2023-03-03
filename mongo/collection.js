@@ -211,7 +211,7 @@ class Collection {
         this.keysChangeCheck( constraints, oldValue, newValue, 0, [], callback )
     }
 
-    synchronizingEverySinglePK = ( primaries, index, callback ) => {
+    synchronizingEverySinglePK = ( primaries, index, oldValue, newValue, callback ) => {
         if( index === primaries.length ){
             callback({ success: true })
         }else{
@@ -228,7 +228,47 @@ class Collection {
                 /*
                     Recursive and synchronize data
                 */
-                this.synchronizingEverySinglePK( primaries, index + 1, callback )
+                const references = result;
+
+                const query = `
+                    SELECT field_alias FROM fields WHERE field_id = ${ pk.field_id }
+                `;
+
+                mysql( query, (result) => {
+                    const { field_alias } = result[0];
+
+                    if( references && references.length > 0 ){
+                        this.cascadingSyncPrimaryKeyData( references, 0, oldValue, newValue, field_alias, ({ success }) => {
+
+                            this.synchronizingEverySinglePK( primaries, index + 1, oldValue, newValue, callback )
+                        })
+                    }else{
+                        this.synchronizingEverySinglePK( primaries, index + 1, oldValue, newValue, callback )
+                    }
+                })
+            })
+        }
+    }
+
+    cascadingSyncPrimaryKeyData = ( references, index, oldValue, newValue, oldFieldAlias, callback ) => {
+        if( index === references.length ){
+
+            const criteria = {};
+            const newkeys = {};
+            criteria[ oldFieldAlias ] = oldValue[ oldFieldAlias ];
+            this.update( criteria, newValue , ({ content }) => {
+                callback({ success: true })
+            })
+        }else{
+            const { field_alias, table_alias } = references[index];
+            const criteria = {};
+            const newkeys = {};
+            criteria[ field_alias ] = oldValue[ oldFieldAlias ];
+            newkeys[ field_alias ] = newValue[ oldFieldAlias ];
+            mongo( dbo => {
+                dbo.collection( table_alias ).update( criteria, { $set: newkeys } , (err, result) => {
+                    this.cascadingSyncPrimaryKeyData( references, index + 1, oldValue, newValue, oldFieldAlias, callback )
+                })
             })
         }
     }
@@ -238,8 +278,8 @@ class Collection {
         const primaries = constraints.filter( constraint => constraint.constraint_type === "pk" );
         if( primariesChange.length > 0 ){
             this.constraintCheck(newValue, [{ constraint_type: "pk", keys: primaries }], 0, true, ({ success, content }) => {
-                console.log( "222 :",  { success, content } )
-                this.synchronizingEverySinglePK( primaries, 0, ({success}) => {
+                console.log( "281 :",  { success, content } )
+                this.synchronizingEverySinglePK( primaries, 0, oldValue, newValue, ({success}) => {
                     callback( { success, content: "Primary key cascading updated" } )
                 })
                 /* synchronizing data here */
@@ -252,32 +292,52 @@ class Collection {
     synchronizeForeignData = ( constraints, changes, oldValue, newValue, callback ) =>{
         const foreignsChange = changes.filter( change => change.type === "fk" );
         const foreigns  = constraints.filter( constraint => constraint.constraint_type === "fk" );
+        const primaries = constraints.filter( constraint => constraint.constraint_type === "pk" );
 
         if( foreignsChange.length > 0 ){
             this.constraintCheck(newValue, foreigns, 0, true, ({ success, content }) => {
-                console.log("239 ", { success, content } )
-
-                /* foreign key synchronizing data */
-
-                callback( { success, content } )
+                console.log("299 ", { success, content } )
+                if( success ){
+                    this.getKeysAndValueFromConstraint( oldValue, primaries, 0, {}, true, ({ passed, key }) => {
+                        const oldKey = key;
+                        this.getKeysAndValueFromConstraint( newValue, primaries, 0, {}, true, ({ passed, key }) => {
+                            const newKey = key;
+                            this.find(newKey, ({content , data })=> {
+                                if( data.length > 0 ){
+                                    callback( { success: false, content: "Primary key constraint conflict !" } )
+                                }else{
+                                    this.update( oldKey, newValue, ({ content }) => {
+                                        callback( { success: false, content: "Successfully updated data" } )
+                                    })
+                                }
+                            })
+                        })
+                    })
+                }
+                else{
+                    /* Conflict foreign constraint becuz the foreign cannot be found */
+                    console.log("Foreign key change conflict data desgin")
+                    callback( { success, content } )
+                }
             })
         }else{
-            callback( { success: false, content: "No primary key conflict found" } )
+            callback( { success: false, content: "No foreign key conflict found" } )
         }
     }
 
+
     update = (criteria, newValue, callback ) => {
-        this.col.update( criteria, { $set: { ...newValue } }, ( err, result ) =>  {
 
-
-
-            /*
-                Foreign key update
-                Type check update
-            */
-
-            callback( {  content: `SUCCESSFULLY UPDATED DATA` }  )
+        this.find( criteria, ({ content, data }) => {
+            if( data.length > 0 ) {
+                this.col.update( criteria, { $set: { ...newValue } }, ( err, result ) =>  {
+                    callback( {  content: `SUCCESSFULLY UPDATED DATA` }  )
+                })
+            }else{
+                callback( {  content: `DATASET NOT FOUND` }  )
+            }
         })
+
     }
 
     deleteAll = ( callback ) => {

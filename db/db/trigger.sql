@@ -41,6 +41,7 @@ BEFORE DELETE ON `accounts`
 FOR EACH ROW
 BEGIN
 	DELETE FROM `account_detail` WHERE credential_string = OLD.credential_string;
+    DELETE FROM `tables` WHERE credential_string = OLD.credential_string;
 END
 
 $$

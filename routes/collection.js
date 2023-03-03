@@ -114,8 +114,8 @@ router.put('/:table_id', (req, res) => {
 
     tables.getone( criteria, ({ success, table, content }) => {
         if( success ){
-            table.update(  oldValue, newValue ,({ success, context })=> {
-                res.send(200, { success, context })
+            table.update(  oldValue, newValue ,({ success, content })=> {
+                res.send(200, { success, content })
             })
         }else{
             res.send(404, { content })
