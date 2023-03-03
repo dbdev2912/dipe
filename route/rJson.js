@@ -36,16 +36,13 @@ router.post(`/add`, (req, res) => {
     const { data } = req.body;
     console.log(data)
     mongo((dbo) => {
-
         dbo.collection("json").insertOne(data, (err, result) => {
             res.send({ success: true, content: "SUCCESSFULY INSERTED A NEW PAGE" })
         })
     })
 })
 
-
 router.put(`/update/:page_id`, (req, res) => {
-
     const { title, description } = req.body;
     try {
         mongo((dbo) => {
@@ -61,28 +58,20 @@ router.put(`/update/:page_id`, (req, res) => {
                 },
                 (err, result) => {
                     if (err) {
-
                         res.send({ success: false })
                     }
                     else {
                         res.send(200, { success: true, page: result })
                     }
                 });
-
-
-
         });
     }
     catch (err) {
         return res.status(500).json({ error: err.message });
     }
-
 })
 
-
 router.delete(`/delete/:page_id`, (req, res) => {
-
-
     try {
         mongo((dbo) => {
             dbo.collection("pages").deleteOne(
@@ -98,14 +87,10 @@ router.delete(`/delete/:page_id`, (req, res) => {
                         res.send(200, { success: true, page: result })
                     }
                 });
-
-
-
         });
     }
     catch (err) {
         return res.status(500).json({ error: err.message });
     }
-
 })
 module.exports = { router }

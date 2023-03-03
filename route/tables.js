@@ -90,10 +90,10 @@ router.put('/modify', function (req, res) {
     Tables.getone(criteria, ({ success, table }) => {
         if (success) {
             table.modify(table_name, ({ success }) => {
-                res.send({ success: true, content: "Sửa bảng thành công " })
+                res.status(200).send({ success: true, content: "Sửa bảng thành công " })
             })
         } else {
-            res.send({ success: false, content: `Không tìm thấy bảng có ID: ${table_id}` })
+            res.status(404).send({ success: false, content: `Không tìm thấy bảng có ID: ${table_id}` })
         }
     })
 });
@@ -125,7 +125,7 @@ router.delete('/delete/all', (req, res) => {
     Tables.dropAllTables((result) => {
         const { success, content } = result;
         if (success) {
-            res.send(200, { success, content })
+            res.status(200).send( { success, content })
         }
     })
 })
