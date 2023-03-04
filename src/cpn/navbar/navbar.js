@@ -1,23 +1,12 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useState } from 'react';
 
-const urls = [
-    { id: 0, url: "/", label: "Trang chủ", icon: "home.png",},
-    { id: 1, url: "/projects", label: "Quản lý dự án", icon: "manage.png" },
-    { id: 2, url: "/plan", label: "Kế hoạch làm việc", icon: "plan.png" },
-    { id: 3, url: "/statistic", label: "Thống kê", icon: "chart.png" },
-    { id: 4, url: "/report/export", label: "Xuất báo cáo", icon: "export.png" },
-]
 
-const bottomUrls = [
-    { id: 5, url: "/setting", label: "Cài đặt", icon: "settings.png" },
-    { id: 6, url: "/help", label: "Trợ giúp", icon: "help.png" },
-]
-
-
-export default () => {
+export default ( props ) => {
     const { highlight, navState } = useSelector( state => state );
     const dispatch = useDispatch();
+
+    const { urls, bottomUrls } = props;
 
     const navTrigger = () => {
         dispatch({

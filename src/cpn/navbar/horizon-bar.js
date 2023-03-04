@@ -10,13 +10,13 @@ const urls = [
 export default () => {
 
     const [ height, setHeight ] = useState(false);
-    const { auth } = useSelector( state => state );
+    const { auth, defaultImage, proxy } = useSelector( state => state );
 
     return(
-        <div className="sticky-default flex flex-no-wrap flex-end z-index-1 w-100-pct shadow horizon-bar p-0-5">
+        <div className="sticky-default flex flex-no-wrap flex-end z-index-2 w-100-pct shadow horizon-bar p-0-5">
             <span className="text-18-px block p-0-5">{ auth.fullname }</span>
             <div className="avatar-container flex flex-middle m-r-1 pointer" onClick={ () => { setHeight( !height ) } }>
-                <img src={ auth.img_url } className="w-50-px border-radius-24-px"/>
+                <img src={ auth.avatar == defaultImage ? defaultImage : `${ proxy }${ auth.avatar }`  } className="w-50-px border-radius-24-px"/>
             </div>
             <div className="rel">
                 <div className=" abs r-0 drop-container no-overflow" style={{ width: "max-content", height: `${ height ? 210: 0 }px`, transition: "ease-in-out 0.25s", top: "100%" }}>

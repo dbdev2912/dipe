@@ -1,6 +1,7 @@
-import Home from './home';
-import { Projects } from './projects';
+import Home from './splitter';
+import { Projects, SuProjects } from './projects';
+import { SuUsers, SuUser } from './users';
 
 export{
-    Home, Projects
+    Home, Projects, SuProjects, SuUsers, SuUser
 }

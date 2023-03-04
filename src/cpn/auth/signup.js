@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 
+import APP_API from '../../APP_API';
+
 export default () => {
     const [ auth, setAuth ] = useState({})
 
@@ -17,12 +19,12 @@ export default () => {
                 alert("Mẫu khẩu và xác nhận mật khẩu không khớp !!")
             }else{
 
-                fetch("/api/auth/signup", {
+                fetch(`${ APP_API }/api/auth/signup`, {
                     method: "post",
                     headers: {
                         "content-type": "application/json"
                     },
-                    body: JSON.stringify({ auth }),
+                    body: JSON.stringify({ auth })
                 }).then( res => res.json() ).then( ({ success, msg }) => {
                     if( success ){
                         window.location = '/';
