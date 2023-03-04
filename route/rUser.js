@@ -2,8 +2,12 @@ var express = require('express');
 const User = require('../Model/User');
 var router = express.Router();
 var db = require("../Connect/Dbconnection")
+
+const { cropIMG } = require('../module/crop');
+
+const { mysql } = require('../Connect/conect');
 //@route GET api/user/GetAll
-//@desc GetAll or GetById user 
+//@desc GetAll or GetById user
 //@access Public
 router.get('/getall/:credential_string?', function (req, res) {
     if (req.params.credential_string) {
@@ -30,7 +34,7 @@ router.get('/getall/:credential_string?', function (req, res) {
     }
 });
 //@route POST api/auth/register
-//@desc Register user 
+//@desc Register user
 //@access Public
 // router.post('/register',function(req,res){
 //     try {
@@ -47,7 +51,7 @@ router.get('/getall/:credential_string?', function (req, res) {
 
 // });
 //@route POST api/user/active
-//@desc Update Role user 
+//@desc Update Role user
 //@access Public
 router.put('/active', function (req, res) {
     User.activeUser(req.body, function (err, count) {
@@ -59,7 +63,7 @@ router.put('/active', function (req, res) {
     });
 });
 //@route POST api/user/changePassword
-//@desc changepass user 
+//@desc changepass user
 //@access Public
 router.put('/changePassword', async (req, res) => {
     User.user_change_password(req.body, function (err, count) {
@@ -71,7 +75,7 @@ router.put('/changePassword', async (req, res) => {
     });
 })
 //@route POST api/user/changeInfo
-//@desc change Info user 
+//@desc change Info user
 //@access Public
 router.put('/changeInfo', async (req, res) => {
     User.user_change_info(req.body, function (err, count) {
@@ -82,7 +86,7 @@ router.put('/changeInfo', async (req, res) => {
         }
     });
 })
-router.delete('/delete/:credential_string?', async (req, res) => {
+router.delete('/delete/:credential_string', async (req, res) => {
     const { credential_string } = req.params;
     User.delete_user(req.params, function (err, result) {
         const { success, content } = result[0][0]
@@ -101,5 +105,30 @@ router.delete('/delete/:credential_string?', async (req, res) => {
         }
     });
 })
-module.exports = router;
 
+
+router.put(`/prop/:credential_string`, (req, res) => {
+    const { key, value } = req.body;
+    const { credential_string } = req.params;
+    const query = `
+        UPDATE ACCOUNT_DETAIL SET ${ key } = '${ value }'
+            WHERE CREDENTIAL_STRING = '${credential_string}';
+    `;
+    mysql( query, result => {
+        res.status(200).send({ success: true })
+    })
+})
+router.put(`/:credential_string/changeava`, (req, res) => {
+    const { img } = req.body;
+    const { credential_string } = req.params;
+    cropIMG( img, credential_string, ({ success, avatar }) => {
+        const query = `
+            UPDATE ACCOUNT_DETAIL SET AVATAR = '${ avatar }'
+            WHERE CREDENTIAL_STRING = '${ credential_string }'
+        `;
+        mysql( query, result => {
+            res.send({  success: true })
+        })
+    })
+})
+module.exports = router;

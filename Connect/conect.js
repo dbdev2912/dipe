@@ -8,7 +8,7 @@ var mysql = require('mysql');
 
 // });
 
-var conn=mysql.createConnection({ 
+var conn=mysql.createConnection({
     host:'localhost',
     user:'nhan',
     password:'root',

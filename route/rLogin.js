@@ -28,7 +28,9 @@ function checkdata(input) {
 }
 // Đăng ký tài khoản người dùng mới
 router.post('/create_user', async (req, res) => {
-  const { account_string, pwd_string } = req.body;
+    /* Thêm account_role vào body vì đã chia ra thêm một role mới là su ( stands for super user ) */
+  const { user } = req.body;
+  const { account_string, pwd_string, account_role, fullname, email, phone, address } = user;
   if (!checkdata(account_string)) {
     return res.status(400).json({ success: false, content: 'Vui lòng nhập tài khoản' });
   }
@@ -48,13 +50,19 @@ router.post('/create_user', async (req, res) => {
     const hashedPassword = await bcrypt.hash(pwd_string, 10);
     const account_status = 1;
     const credential_string = 'hihi' + (new Date()).getTime();
-    const account_role = "user";
+
     // Thêm người dùng mới vào cơ sở dữ liệu
     await connection.promise().query(
       'INSERT INTO accounts (account_string, pwd_string, account_status, credential_string, account_role ) VALUES (?, ?, ?, ?, ?)',
       [account_string, hashedPassword, account_status, credential_string, account_role]
     );
-    res.status(200).json({ success: true, content: 'Tài khoản đã được tạo thành công' });
+
+    await connection.promise().query(
+      'INSERT INTO account_detail (credential_string, fullname, phone, email, address ) VALUES (?, ?, ?, ?, ?)',
+      [credential_string, fullname, phone, email, address]
+    );
+
+    res.status(200).json({ success: true, credential_string, content: 'Tài khoản đã được tạo thành công' });
   }
 });
 // Đăng nhập tài khoản người dùng
