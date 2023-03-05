@@ -17,11 +17,36 @@
 .overflow{
     overflow: auto;
 }
+.scroll-x{
+    overflow-x: scroll;
+}
+
+.scroll-y{
+    overflow-y: scroll;
+}
 
 .fade-in-ease{
     animation-name: fadeInEase;
     animation-duration: 1s;
     opacity: 1;
+}
+
+.horizon-scroll-bar{
+    &::-webkit-scrollbar{
+        height: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb{
+        background-color: #777;
+    }
+
+    &::-webkit-scrollbar-thumb:hover{
+        background-color: #333;
+    }
+
+    &::-webkit-scrollbar-track{
+        background-color: #fff;
+    }
 }
 
 @keyframes fadeInEase {
@@ -128,4 +153,25 @@ $hidenDist: -242px;
     height: 15px;
     background: black;
     transform: rotate(45deg);
+}
+
+
+.circle-processing{
+    width: 100px;
+    animation-name: circleProcessing;
+    animation-duration: 0.5s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+}
+
+@keyframes circleProcessing {
+    0%{
+        transform: rotate(0deg);
+    }
+    50%{
+        transform: rotate(180deg);
+    }
+    100%{
+        transform: rotate(360deg);
+    }
 }

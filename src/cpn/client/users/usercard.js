@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 export default (props) => {
-    const { user, removeFromUI } = props;
+    const { user, removeFromUI, readOnly, alterFunc } = props;
     const { proxy, defaultImage, unique_string } = useSelector( state => state );
     const { openTab } = useSelector( state => state.functions )
     const [ hiddenMenu, setHiddenMenu ] = useState(false);
@@ -14,18 +14,25 @@ export default (props) => {
 
     const ctxMenu = (e) => {
         e.preventDefault();
-        setHiddenMenu( !hiddenMenu );
+        if( !readOnly ){
+            setHiddenMenu( !hiddenMenu );
+        }
     }
 
     const removeUser = () => {
-        fetch(`${proxy}/api/${ unique_string }/user/delete/${ user.credential_string }`, {
-            method: 'DELETE',
-            headers: {
-                "content-type": "application/json",
-            },
-        }).then( res => res.json() ) .then( (data) => {
-            removeFromUI( user );
-        })
+        if( alterFunc != undefined ){
+            alterFunc(user)
+        }
+        else{
+            fetch(`${proxy}/api/${ unique_string }/user/delete/${ user.credential_string }`, {
+                method: 'DELETE',
+                headers: {
+                    "content-type": "application/json",
+                },
+            }).then( res => res.json() ) .then( (data) => {
+                removeFromUI( user );
+            })
+        }
     }
 
     return(

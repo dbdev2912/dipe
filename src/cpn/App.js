@@ -11,7 +11,7 @@ import {
 import "../css/index.scss";
 
 import { Login, SignUp, SignOut } from './auth';
-import { Home, Projects, SuProjects, SuUsers, SuUser } from './client';
+import { Home, Projects, SuProjects, SuProject, SuUsers, SuUser } from './client';
 
 function App() {
     const dispatch = useDispatch()
@@ -54,6 +54,7 @@ function App() {
                 <Route exac path="/" element = { <Home /> } />
                 <Route exac path="/projects" element = { <Projects /> } />
                 <Route exac path="/su/projects" element = { <SuProjects /> } />
+                <Route exac path="/su/project/:project_id" element = { <SuProject /> } />
                 <Route exac path="/su/users" element = { <SuUsers /> } />
                 <Route exac path="/su/user/:credential_string" element = { <SuUser /> } />
             </Routes>

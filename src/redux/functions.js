@@ -1,14 +1,51 @@
 const dateGenerator = ( dateString ) => {
-    const monthNames = [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    ];
     const date = new Date( dateString );
-    return `${ monthNames[ date.getMonth() ] } ${ date.getDate() }, ${ date.getFullYear() } at ${ date.getHours() }: ${ date.getMinutes() }`
+    return `${ formatDateNumber(date.getDate()) }/${ formatDateNumber(date.getMonth() + 1) }/${ date.getFullYear() } lúc ${ formatDateNumber(date.getHours()) }:${ formatDateNumber(date.getMinutes()) }`
+}
+
+const formatDateNumber = (int) => {
+    if( int < 10 ){
+        return `0${int}`
+    }else{
+        return `${int}`
+    }
 }
 
 const openTab = (url) => {
     window.open(url, '_blank').focus();
+}
+
+
+const autoLabel = ( key ) => {
+    switch (key) {
+        case "INITIALIZING":
+            return "Khởi động";
+            break;
+        case "STARTED":
+            return "Bắt đầu";
+            break;
+        case "PROGRESS":
+            return "Thực hiện";
+            break;
+        case "RELEASE":
+            return "Triển khai";
+            break;
+        case "FINAL":
+            return "Cuối cùng";
+            break;
+        case "COMPLETED":
+            return "Hoàn thành";
+            break;
+        case "BUG":
+            return "Lỗi";
+            break;
+        case "SUSPEND":
+            return "Tạm dừng";
+            break;
+        default:
+            return "Khác";
+            break;
+    }
 }
 
 function titleCase(str) {
@@ -18,5 +55,5 @@ function titleCase(str) {
 }
 
 export default {
-    dateGenerator, openTab, titleCase
+    dateGenerator, openTab, titleCase, autoLabel
 }

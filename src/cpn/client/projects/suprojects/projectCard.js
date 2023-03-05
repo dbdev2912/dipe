@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 export default (props) => {
 
     const { project } = props;
-    const { dateGenerator } = useSelector( state => state.functions )
+    const { dateGenerator, autoLabel, openTab } = useSelector( state => state.functions )
 
     const stateColors = {
         'INITIALIZING': "#ff00ff",
@@ -16,19 +16,24 @@ export default (props) => {
         'SUSPEND': "#fff61e",
        }
 
-      const { defaultImage, proxy } = useSelector( state => state )
+    const { defaultImage, proxy } = useSelector( state => state )
+
+    const redirectOrSomething = () => {
+        const { project_id } = project;
+        openTab(`/su/project/${ project_id }`)
+    }
 
     return(
         <div className="project-card m-1 p-1 bg-white shadow-blur">
 
             { /* STATUS LABEL */ }
             <div>
-                <span className="block w-max-content white text-12-px p-t-0-5 p-b-0-5 p-l-1 p-r-1 border-radius-12-px" style={{ backgroundColor: `${ stateColors[ project.status_name ] }` }}>{ project.status_name }</span>
+                <span className="block w-max-content white text-12-px p-t-0-5 p-b-0-5 p-l-1 p-r-1 border-radius-12-px upper" style={{ backgroundColor: `${ stateColors[ project.status_name ] }` }}>{ autoLabel(project.status_name) }</span>
             </div>
 
             { /* PROJECT NAME AND CREATED DATE */ }
             <div className="m-t-2">
-                <span className="block text-20-px">{ project.project_name }</span>
+                <span onClick={ redirectOrSomething } className="block text-20-px pointer underline-hover">{ project.project_name }</span>
                 <span className="block gray text-14-px">{ dateGenerator( project.create_on ) }</span>
             </div>
 
@@ -52,10 +57,10 @@ export default (props) => {
             { /* RENCENT TASK */ }
             <div className="m-t-0-5">
                 <textarea className="task-description-box block no-border border-1-bottom w-100-pct"
-                    defaultValue={ project.recentTask[0].task_description }
+                    defaultValue={ project.recentTask[0].task_label }
                 />
-                <span className="text-14-px italic">by <span className="bold">@{ project.recentTask[0].fullname }</span></span>
-                <span className="block gray text-14-px">on { dateGenerator( project.recentTask[0].change_at ) }</span>
+                <span className="text-14-px italic">bởi <span className="bold">@{ project.recentTask[0].fullname }</span></span>
+                <span className="block gray text-14-px">{ dateGenerator( project.recentTask[0].change_at ) }</span>
             </div>
 
 

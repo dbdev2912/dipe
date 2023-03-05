@@ -1,6 +1,6 @@
 import { Projects } from './projects';
-import { SuProjects } from './suprojects';
+import { SuProjects, SuProject } from './suprojects';
 
 export {
-    Projects, SuProjects
+    Projects, SuProjects, SuProject
 }

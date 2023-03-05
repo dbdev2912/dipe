@@ -155,9 +155,10 @@ export default () => {
                             </div>
                         </div>
 
+                        {/* INPUT BOX */}
                         <div className="fixed bg-white shadow" style={{ top: `${ offset.y }px`, left: `${ offset.x }px`, width: "325px" }}>
                             <div className="flex flex-no-wrap w-100-pct p-0-5">
-                                <input id={ "input-box" } onBlur={ discardChange } onChange={ (e) => { setInput({ ...input, value: e.target.value }) } } onKeyUp={ enterTrigger } className="no-border border-1-bottom block w-100-pct p-0-5" value={ input.value }/>
+                                <input spellCheck="false" id={ "input-box" } onBlur={ discardChange } onChange={ (e) => { setInput({ ...input, value: e.target.value }) } } onKeyUp={ enterTrigger } className="no-border border-1-bottom block w-100-pct p-0-5" value={ input.value }/>
                                 <div className="flex flex-middle w-48-px">
                                     <img onClick={ submitChange } className="block w-50-pct pointer" src="/assets/icon/check-color.png"/>
                                 </div>

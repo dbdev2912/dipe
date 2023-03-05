@@ -3,9 +3,26 @@
     max-width: 325px;
 }
 
+.project-card-50-pct{
+    .project-card{
+        max-width: unset
+    }
+}
 
 .task-description-box{
     height: 125px;
     resize: none;
     overflow: auto;
+}
+
+.scaled-card{
+    min-width: 325px;
+}
+
+.dual-scroll-view{
+    height: 80vh;
+}
+
+.users-box{
+    height: calc(100% - 150px);
 }

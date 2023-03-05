@@ -37,3 +37,12 @@
 .flex-bottom{
     align-items: end;
 }
+
+.column{
+    display: flex;
+    flex-direction: column;
+
+}
+.fill-available{
+    flex-grow: 1;
+}
