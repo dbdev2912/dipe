@@ -4,6 +4,7 @@ var router = express.Router();
 const { mysql } = require('../Connect/conect');
 
 const queryMultipleTime = ( data, queries, index, callback ) => {
+
     if( index === queries.length ){
         callback( { data } );
     }else{
@@ -136,5 +137,152 @@ router.get('/of/:credential_string', (req, res) => {
         res.status(200).send({ projects: context })
     })
 })
+
+router.get('/project/:project_id', (req, res) => {
+    const { project_id } = req.params;
+
+    const query = `
+        SELECT *
+        FROM PROJECTS AS P
+            INNER JOIN PROJECT_STATUS AS PS ON P.PROJECT_STATUS = PS.STATUS_ID
+        WHERE PROJECT_ID = ${ project_id }
+    `;
+    mysql( query, result => {
+        if( result != undefined && result.length > 0 ){
+            const project = result[0];
+
+            const queries = [
+                {
+                    name: "owner",
+                    query: `
+                        SELECT *
+                            FROM ACCOUNT_DETAIL
+                        WHERE
+                            CREDENTIAL_STRING IN (
+                                SELECT PROJECT_MASTER
+                                FROM PROJECTS
+                                WHERE PROJECT_ID = ${ project_id }
+                            )
+                    `
+                },
+
+                {
+                    name: "partners",
+                    query: `
+                        SELECT *
+                        FROM ACCOUNT_DETAIL
+                        WHERE
+                            CREDENTIAL_STRING IN (
+                                SELECT CREDENTIAL_STRING
+                                FROM PROJECT_PARTNER
+                                WHERE PROJECT_ID = ${ project_id }
+                            )
+                    `
+                },
+
+                {
+                    name: "users",
+                    query: `
+                        SELECT *
+                        FROM ACCOUNT_DETAIL
+                        WHERE
+                            CREDENTIAL_STRING IN (
+                                SELECT CREDENTIAL_STRING
+                                FROM PROJECT_USER
+                                WHERE PROJECT_ID = ${ project_id }
+                            )
+                    `
+                },
+
+                {
+                    name: "versions",
+                    query: `
+                        SELECT *
+                        FROM VERSIONS AS V
+                            INNER JOIN ACCOUNT_DETAIL AS AD ON AD.CREDENTIAL_STRING = V.PUBLISHER
+                        WHERE PROJECT_ID = ${ project_id };
+                    `
+                },
+                {
+                    name: "tasks",
+                    query: `
+                        SELECT * FROM TASKS AS T
+                            INNER JOIN ACCOUNT_DETAIL AS AD
+                                ON T.TASK_OWNER = AD.CREDENTIAL_STRING
+                                    INNER JOIN TASK_STATUS AS TS ON TS.STATUS_ID = T.TASK_STATE
+                        WHERE PROJECT_ID = ${ project_id };
+                    `
+                }
+            ]
+
+            queryMultipleTime({}, queries, 0, ({ data }) => {
+                res.status(200).send({ success: true, data: { ...data, project  } })
+            })
+
+        }else{
+            res.status(404).send("404 - PAGE NOT FOUND");
+        }
+    })
+});
+
+
+router.delete(`/project/:project_id/:credential_string`, (req, res) => {
+    const { project_id, credential_string } = req.params;
+    const query = `
+        DELETE FROM PROJECT_PARTNER
+        WHERE
+            CREDENTIAL_STRING = '${ credential_string }' AND
+            PROJECT_ID = ${ project_id }
+    `;
+    mysql( query, result => {
+
+        const query = `
+            DELETE FROM PROJECT_USER
+            WHERE
+                CREDENTIAL_STRING = '${ credential_string }' AND
+                PROJECT_ID = ${ project_id }
+        `;
+        mysql( query, result => {
+
+            res.status(200).send({ success: true })
+        })
+    })
+})
+
+
+router.post('/project/:project_id/partners/and/users', (req, res) => {
+    const { project_id } = req.params;
+    const { partners, users } = req.body;
+    const queries = [];
+    if( partners != undefined && partners.length > 0 ){
+        const partnersCredentialString = partners.map( partner => {
+            return `(${ project_id }, '${ partner.credential_string }')`
+        });
+        const partnerTail = partnersCredentialString.join(", ");
+        queries.push(
+            {
+                name: "partners",
+                query: `INSERT INTO PROJECT_PARTNER( PROJECT_ID, CREDENTIAL_STRING) VALUES ${ partnerTail }`
+            }
+        );
+    }
+
+    if( users != undefined && users.length > 0 ){
+        const usersCredentialString = users.map( user => {
+            return `(${ project_id }, '${ user.credential_string }')`
+        });
+        const userTail = usersCredentialString.join(", ");
+        queries.push(
+            {
+                name: "partners",
+                query: `INSERT INTO PROJECT_USER( PROJECT_ID, CREDENTIAL_STRING) VALUES ${ userTail }`
+            }
+        );
+    }
+    queryMultipleTime({}, queries, 0, ({ data }) => {
+        res.status(200).send({ success: true })
+    })
+});
+
 
 module.exports = router;
