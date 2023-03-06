@@ -1,14 +1,14 @@
 USE DIPE;
 
 DELIMITER $$
-
+/* HAHAHAHAHAHAHAHAHAHAHA fix procedure loi cai loz */
 DROP PROCEDURE IF EXISTS `table_add` $$
-CREATE PROCEDURE `table_add` ( IN in_table_name VARCHAR(255), IN in_credential_string VARCHAR(255), IN in_table_alias VARCHAR(255) )
+CREATE PROCEDURE `table_add` ( IN in_table_name VARCHAR(255), IN in_project_id INT, IN in_table_alias VARCHAR(255) )
 BEGIN
 	DECLARE table_existed INT;
     SELECT COUNT(*) INTO table_existed FROM `tables` WHERE `table_alias` = in_table_alias;
     IF table_existed = 0 THEN
-		INSERT INTO `tables`(`table_name`, `table_alias`, `credential_string`) VALUES ( in_table_name, in_table_alias, in_credential_string );
+		INSERT INTO `tables`(`table_name`, `table_alias`, `project_id`) VALUES ( in_table_name, in_table_alias, in_project_id );
         
 		/* TRIGGER IS GONNA BE CALLED SOON */
         

@@ -2,7 +2,7 @@ USE DIPE;
 DELIMITER $$
 
 DROP PROCEDURE IF EXISTS `account_add` $$
-CREATE PROCEDURE `account_add`(IN new_account_string VARCHAR(255), IN new_pwd_string VARCHAR(255), IN new_account_role ENUM('user', 'admin')) 
+CREATE PROCEDURE `account_add`(IN new_account_string VARCHAR(255), IN new_pwd_string VARCHAR(255), IN new_account_role ENUM('user', 'admin', 'su')) 
 
 BEGIN 
 	DECLARE acc_existed INT;

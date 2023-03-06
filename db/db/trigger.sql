@@ -2,17 +2,6 @@ USE DIPE;
 
 DELIMITER $$
 
-DROP TRIGGER IF EXISTS AUTO_INSERT_BLANK_RECORD_AFTER_ADD_ACCOUNT $$
-CREATE TRIGGER AUTO_INSERT_BLANK_RECORD_AFTER_ADD_ACCOUNT
-AFTER INSERT ON `accounts`
-FOR EACH ROW
-BEGIN 
-	INSERT INTO `account_detail`( `credential_string`, `fullname`, `phone`, `email`, `address` ) VALUES
-    ( NEW.credential_string, "Unknown", "Unknown phone number", "Unknown email address", "Nowhere" );
-END
-
-$$
-
 
 DROP TRIGGER IF EXISTS AUTO_DROP_FIELDS_AND_CONSTRAINT_BEFORE_DROPPING_TABLE $$
 CREATE TRIGGER AUTO_DROP_FIELDS_AND_CONSTRAINT_BEFORE_DROPPING_TABLE
@@ -41,8 +30,19 @@ BEFORE DELETE ON `accounts`
 FOR EACH ROW
 BEGIN
 	DELETE FROM `account_detail` WHERE credential_string = OLD.credential_string;
-    DELETE FROM `tables` WHERE credential_string = OLD.credential_string;
+    DELETE FROM `projects` WHERE project_master = OLD.credential_string;
+    DELETE FROM `project_partner` WHERE credential_string = OLD.credential_string;
+    DELETE FROM `project_user` WHERE credential_string = OLD.credential_string;
 END
 
 $$
 
+DROP TRIGGER IF EXISTS AUTOMATED_ADD_TASK_TO_PROJECT_TASK_AFTER_CREATED_ONE $$
+CREATE TRIGGER AUTOMATED_ADD_TASK_TO_PROJECT_TASK_AFTER_CREATED_ONE 
+AFTER INSERT ON PROJECTS 
+FOR EACH ROW
+BEGIN
+	INSERT INTO TASKS(PROJECT_ID, TASK_OWNER, TASK_LABEL, TASK_STATE) VALUES ( NEW.PROJECT_ID, NEW.PROJECT_MASTER, "INITIALIZED PROJECT FOR THE BEGINNING",4 );
+    INSERT INTO VERSIONS (version_name, project_id, publisher, descriptions) VALUES ( "V0.0.1", NEW.PROJECT_ID, NEW.PROJECT_MASTER, "Version tươi mới như mối tình đầu" );
+END
+$$

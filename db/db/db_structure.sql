@@ -8,7 +8,7 @@ CREATE TABLE `accounts`(
     pwd_string 		VARCHAR(255) NOT NULL,
     account_status 	ENUM("1", "0") NOT NULL,
     credential_string VARCHAR(255) UNIQUE NOT NULL,
-    account_role 	ENUM('user', 'admin') DEFAULT 'user'
+    account_role 	ENUM('user', 'admin', 'su') DEFAULT 'user'
 );
 
 CREATE TABLE `account_detail`(
@@ -16,24 +16,95 @@ CREATE TABLE `account_detail`(
     fullname 	VARCHAR(255),
     email 		VARCHAR(255),
     phone 		VARCHAR(255),
-    address 	TEXT
+    address 	TEXT,
+    avatar 		VARCHAR(512) DEFAULT '/assets/image/icon.png'
 );
-
 
 ALTER TABLE `account_detail` ADD CONSTRAINT `fk_account_accountdetail` 
 	FOREIGN KEY (credential_string) 
 		REFERENCES accounts( credential_string ) ON UPDATE CASCADE;
 
 
+CREATE TABLE `project_status`
+(
+	status_id INT PRIMARY KEY NOT NULL,
+    status_name VARCHAR(255)
+);
+
+INSERT INTO `project_status` VALUES( 1, 'INITIALIZING'), ( 2, 'STARTED'), ( 3, 'PROGRESS'), ( 4, 'RELEASE'), ( 5, 'FINAL'), ( 6, 'COMPLETED'), ( 7, 'BUG'), ( 8, 'SUSPEND');
+
+CREATE TABLE `projects`
+(
+	`project_id` INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+    `project_name` VARCHAR(255) DEFAULT "Dự án mới",
+    `project_master` VARCHAR(255) NOT NULL, -- FK
+    `description` TEXT,
+    `create_on` DATETIME default NOW(),
+    `project_status` INT DEFAULT 1
+);
+
+CREATE TABLE `project_partner`
+(
+	`project_id` INT, -- fk 
+    `credential_string` VARCHAR(255) NOT NULL
+);
+
+ALTER TABLE `project_partner` ADD CONSTRAINT PRIMARY KEY ( project_id, credential_string );
+ALTER TABLE `project_partner` ADD CONSTRAINT `fk_pro_pro_partner` FOREIGN KEY ( project_id ) REFERENCES projects( project_id );
+ALTER TABLE `project_partner` ADD CONSTRAINT `fk_pro_cred` FOREIGN KEY ( credential_string) REFERENCES accounts( credential_string );
+
+CREATE TABLE `project_user`
+(
+	`project_id` INT, -- fk 
+    `credential_string` VARCHAR(255) NOT NULL
+);
+
+ALTER TABLE `project_user` ADD CONSTRAINT PRIMARY KEY ( project_id, credential_string );
+ALTER TABLE `project_user` ADD CONSTRAINT `fk_pro_pro_user` FOREIGN KEY ( project_id ) REFERENCES projects( project_id );
+ALTER TABLE `project_user` ADD CONSTRAINT `fk_pro_cred_user` FOREIGN KEY ( credential_string) REFERENCES accounts( credential_string );
+
+
+CREATE TABLE `task_status`
+(
+	status_id INT PRIMARY KEY NOT NULL,
+    status_name VARCHAR(255)
+);
+
+INSERT INTO `task_status` VALUES( 1, 'INITIALIZING'), ( 2, 'STARTED'), ( 3, 'PROGRESS'), ( 4, 'COMPLETED'), ( 5, 'BUG'), ( 6, 'SUSPEND');
+
+
+CREATE TABLE `tasks`
+(
+	`task_id` INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+	`project_id` INT, -- fk 
+    `task_owner`  VARCHAR(255) NOT NULL,
+    `task_state` TINYINT, -- FK
+    `task_label` TEXT,
+    `task_description` TEXT,
+    `change_at` DATETIME DEFAULT NOW()
+);
+
+ALTER TABLE tasks ADD CONSTRAINT `FK_PRO_TASK` FOREIGN KEY ( project_id ) REFERENCES projects( project_id );
+ALTER TABLE tasks ADD CONSTRAINT `FK_PRO_user` FOREIGN KEY ( task_owner ) REFERENCES accounts( credential_string );
+
+CREATE TABLE task_member(
+	`task_id` INT,
+    `member_cs` VARCHAR(255)
+);
+
+ALTER TABLE task_member ADD CONSTRAINT PRIMARY KEY ( `task_id`, `member_cs` );
+ALTER TABLE task_member ADD CONSTRAINT FOREIGN KEY ( task_id ) REFERENCES tasks( task_id );
+ALTER TABLE task_member ADD CONSTRAINT FOREIGN KEY ( member_cs ) REFERENCES accounts( credential_string );
+
 CREATE TABLE `tables`(
 	table_id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
-    credential_string VARCHAR(255) NOT NULL,
+    version_id INT,
     table_name VARCHAR(255) DEFAULT "Bảng mới",
     table_alias VARCHAR(255) NOT NULL UNIQUE ,
     create_on DATETIME DEFAULT NOW()
 );
 
-ALTER TABLE `tables` ADD CONSTRAINT `fk_acc_tables` FOREIGN KEY ( `credential_string` ) REFERENCES `accounts`( `credential_string` ) ON UPDATE CASCADE;
+ALTER TABLE `tables` ADD CONSTRAINT `fk_project_ver` FOREIGN KEY ( `version_id` ) REFERENCES `versions`( `version_id` ) ON UPDATE CASCADE;
 
 CREATE TABLE `fields`(
 	field_id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -62,6 +133,18 @@ CREATE TABLE `constraints`(
     check_on_field BOOL,
     default_check_value TEXT
 );
+
+CREATE TABLE VERSIONS(
+	version_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    project_id INT,
+    version_name VARCHAR(255),
+    publisher VARCHAR(255),
+    publish_on DATETIME DEFAULT NOW(),
+    descriptions TEXT
+);
+
+ALTER TABLE VERSIONS ADD CONSTRAINT `fk_ver_acc` FOREIGN KEY ( publisher ) REFERENCES accounts( credential_string );
+ALTER TABLE VERSIONS ADD CONSTRAINT `fk)ver_pro` FOREIGN KEY ( project_id ) REFERENCES projects(project_id);
 
 /* NO PROCEDURES OR TRIGGERS */
 CREATE TABLE MODIFY_HISTORY(
