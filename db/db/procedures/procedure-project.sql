@@ -5,19 +5,28 @@ DELIMITER $$
 DROP PROCEDURE IF EXISTS CREATE_PROJECT $$
 
 CREATE PROCEDURE CREATE_PROJECT (
-	IN IN_PROJECT_NAME VARCHAR(255),
+	IN IN_PROJECT_NAME TEXT,
+    IN IN_PROJECT_CODE VARCHAR(255),
     IN IN_PROJECT_MASTER VARCHAR(255),
     IN PROJECT_DESCRIPTION TEXT
 )
 BEGIN
 	DECLARE master_existed INT;
-    SELECT COUNT(*) INTO master_existed FROM accounts WHERE `credential_string` = IN_PROJECT_MASTER;
+	DECLARE project_code_existed INT;
+    SELECT COUNT(*) INTO master_existed FROM accounts WHERE credential_string = IN_PROJECT_MASTER;
     
     IF master_existed > 0 THEN
-		INSERT INTO projects( project_name, project_master, description ) VALUES
-			( IN_PROJECT_NAME , IN_PROJECT_MASTER, PROJECT_DESCRIPTION );
+		SELECT COUNT(*) INTO project_code_existed FROM PROJECTS WHERE project_code = IN_PROJECT_CODE;
+        
+        IF project_code_existed = 0 THEN
+			INSERT INTO projects( project_name, project_master, project_code, description ) VALUES
+			( IN_PROJECT_NAME , IN_PROJECT_MASTER, IN_PROJECT_CODE, PROJECT_DESCRIPTION );
             
-		SELECT TRUE as `success`, "SUCCESSFULLY CREATED NEW PROJECT!" AS content;
+			SELECT TRUE as `success`, "SUCCESSFULLY CREATED NEW PROJECT!" AS content, LAST_INSERT_ID() as project_id;
+        ELSE
+			SELECT FALSE AS `success`, CONCAT("PROJECT CODE ", IN_PROJECT_CODE, " IS ALREADY EXISTED!") AS content;
+        END IF;   
+		
     ELSE
 		SELECT FALSE AS `success`, CONCAT("USER WITH CREDENTIAL STRING ", IN_PROJECT_MASTER, " CANNOT BE FOUND!") AS content;
     END IF;

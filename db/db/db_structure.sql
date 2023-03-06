@@ -33,14 +33,28 @@ CREATE TABLE `project_status`
 
 INSERT INTO `project_status` VALUES( 1, 'INITIALIZING'), ( 2, 'STARTED'), ( 3, 'PROGRESS'), ( 4, 'RELEASE'), ( 5, 'FINAL'), ( 6, 'COMPLETED'), ( 7, 'BUG'), ( 8, 'SUSPEND');
 
+CREATE TABLE VERSIONS(
+	version_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    project_id INT,
+    version_name VARCHAR(255),
+    publisher VARCHAR(255),
+    publish_on DATETIME DEFAULT NOW(),
+    descriptions TEXT
+);
+
+ALTER TABLE VERSIONS ADD CONSTRAINT `fk_ver_acc` FOREIGN KEY ( publisher ) REFERENCES accounts( credential_string );
+
+
 CREATE TABLE `projects`
 (
 	`project_id` INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
-    `project_name` VARCHAR(255) DEFAULT "Dự án mới",
+    `project_code` VARCHAR(255) UNIQUE,
+    `project_name` TEXT DEFAULT "Dự án mới",
     `project_master` VARCHAR(255) NOT NULL, -- FK
     `description` TEXT,
-    `create_on` DATETIME default NOW(),
-    `project_status` INT DEFAULT 1
+    `create_on` DATETIME DEFAULT NOW(),
+    `project_status` INT DEFAULT 1,
+    `active` BOOL
 );
 
 CREATE TABLE `project_partner`
@@ -86,6 +100,18 @@ CREATE TABLE `tasks`
 
 ALTER TABLE tasks ADD CONSTRAINT `FK_PRO_TASK` FOREIGN KEY ( project_id ) REFERENCES projects( project_id );
 ALTER TABLE tasks ADD CONSTRAINT `FK_PRO_user` FOREIGN KEY ( task_owner ) REFERENCES accounts( credential_string );
+
+
+/* NO KEY AND NO TRIGGER */
+CREATE TABLE TASK_MODIFY
+(
+	`task_id` INT,
+    `modified_by` VARCHAR(255),
+    `modified_at` DATETIME DEFAULT NOW(),
+    `modified_what` VARCHAR(255),
+    `from_value` TEXT,
+    `to_value` TEXT
+);
 
 CREATE TABLE task_member(
 	`task_id` INT,
@@ -134,16 +160,7 @@ CREATE TABLE `constraints`(
     default_check_value TEXT
 );
 
-CREATE TABLE VERSIONS(
-	version_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-    project_id INT,
-    version_name VARCHAR(255),
-    publisher VARCHAR(255),
-    publish_on DATETIME DEFAULT NOW(),
-    descriptions TEXT
-);
 
-ALTER TABLE VERSIONS ADD CONSTRAINT `fk_ver_acc` FOREIGN KEY ( publisher ) REFERENCES accounts( credential_string );
 ALTER TABLE VERSIONS ADD CONSTRAINT `fk)ver_pro` FOREIGN KEY ( project_id ) REFERENCES projects(project_id);
 
 /* NO PROCEDURES OR TRIGGERS */
