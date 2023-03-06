@@ -58,7 +58,7 @@ export default (props) => {
             { /* RENCENT TASK */ }
             <div className="m-t-0-5">
                 <textarea className="task-description-box block no-border border-1-bottom w-100-pct"
-                    defaultValue={ project.recentTask[0].task_label }
+                 spellCheck="false"  defaultValue={ project.recentTask[0].task_label }
                 />
                 <span className="text-14-px italic">bởi <span className="bold">@{ project.recentTask[0].fullname }</span></span>
                 <span className="block gray text-14-px">{ dateGenerator( project.recentTask[0].change_at ) }</span>

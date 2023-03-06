@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
+import $ from 'jquery';
+
 import { Navbar, Horizon } from '../../../navbar';
 import UserCard from '../../users/usercard';
 import AddUserDialog from './adduser';
@@ -41,6 +43,9 @@ export default () => {
     const [ userScrollView, setUserScrollView ] = useState([ 1, 0 ])
     const [ dialog, setDialog ] = useState(false)
 
+    const [ stateHeight, setStateHeight ] = useState(0);
+    const [ statuses, setStatuses ] = useState([]);
+    const [ oldStatus, setOldStatus ] = useState({})
     useEffect( () => {
         dispatch({
             type: "setNavBarHighLight",
@@ -50,14 +55,17 @@ export default () => {
 
         fetch(`${proxy}/api/${ unique_string }/projects/project/${project_id}`).then( res => res.json() )
         .then( resp => {
-            const { project, owner, partners, users, versions, tasks } = resp.data;
-            console.log(tasks)
+            const { project, owner, partners, users, versions, tasks, taskStates } = resp.data;
             setProject(project);
             setOwner(owner[0]); setPartners(partners); setUsers(users);
             setTasks( tasks );
             setTask( tasks[0] )
             _setTask( tasks[0] )
             setVersions(versions);
+            setStatuses(taskStates);
+
+            const oldST = taskStates.filter( st => st.status_id == tasks[0].task_state )[0];
+            setOldStatus( oldST );
         })
     }, [])
 
@@ -126,8 +134,6 @@ export default () => {
 
     const taskStateSwitch = () => {
         setTaskState( !taskState )
-        console.log( task )
-        console.log( _task )
 
         if( _task != task ){
             setTask(_task);
@@ -153,9 +159,61 @@ export default () => {
                 body: JSON.stringify({ changes, task_id: task.task_id, credential_string })
             }).then( res => res.json() ).then( data => {
                 const { success } = data
+                const newTasks = tasks.map( task => {
+                    if( task.task_id === _task.task_id ){
+                        return _task;
+                    }else{
+                        return task;
+                    }
+                })
+                setTasks([...newTasks])
             });
         }
 
+    }
+
+    const dropState = () => {
+        if( hasChangePri() ){
+            let height = 0;
+            if( stateHeight === 0 ){
+                height = $('#status-container').height() + 25;
+            }
+            setStateHeight(height);
+        }
+    }
+
+    const updateTaskStatus = ( status ) => {
+        if( status != oldStatus ){
+            const _task = { ...task, ...status };
+            dropState();
+            setTask({ ...task, ...status })
+            const changes = [{
+                    name: "task_state",
+                    value: status.status_id,
+                    from_value: oldStatus.status_id,
+                    modified_what: "trạng thái của yêu cầu"
+                },
+            ]
+
+            fetch(`${ proxy }/api/${ unique_string }/projects/project/task`, {
+                method: "PUT",
+                headers: {
+                    "content-type": "application/json"
+                },
+                body: JSON.stringify({ changes, task_id: task.task_id, credential_string })
+            }).then( res => res.json() ).then( data => {
+                const { success } = data
+                const newTasks = tasks.map( task => {
+                    if( task.task_id === _task.task_id ){
+                        return _task;
+                    }else{
+                        return task;
+                    }
+                })
+                setTasks([...newTasks])
+            });
+
+        }
     }
 
     return(
@@ -243,9 +301,12 @@ export default () => {
                                     <div className="fill-available p-1">
                                         <input className="no-border w-100-pct" placeholder="Tìm ai đó..."/>
                                     </div>
-                                    <div className="w-48-px flex flex-middle">
-                                        <button onClick={ addUsersDialog } className="bold text-24-px no-border bg-green white border-radius-50-pct pointer" style={{ width: "32px", height: "32px" }}>+</button>
-                                    </div>
+                                    { hasChangePri() ?
+                                        <div className="w-48-px flex flex-middle">
+                                            <button onClick={ addUsersDialog } className="bold text-24-px no-border bg-green white border-radius-50-pct pointer" style={{ width: "32px", height: "32px" }}>+</button>
+                                        </div>
+                                        : null
+                                     }
                                 </div>
                                 <div className="fill-available p-0-5 overflow">
 
@@ -338,11 +399,27 @@ export default () => {
                                             <div className="flex flex-bottom">
                                                 <span className="block text-14-px">{ dateGenerator(task.change_at) }</span>
                                             </div>
-                                            <div className="flex flex-bottom ml-auto">
+                                            <div className="flex flex-bottom ml-auto pointer" onClick={ dropState }>
                                                 <span className="block text-14-px">{ task.status_name }</span>
                                                 <span className="block border-radius-50-pct m-l-1" style={{ width: "18px", height: "18px", border: `5px solid ${ stateColors[ task.status_name ] }`}}/>
                                             </div>
                                         </div>
+
+                                        <div className="rel w-100-pct">
+                                            <div className="abs t-0 r-0 no-overflow" style={{ width: "200px", height: `${stateHeight}px`}}>
+                                                <div id="status-container" className="w-100-pct ease">
+                                                    {
+                                                        statuses.map( status =>
+                                                            <div key={status.status_id} onClick={ () => { updateTaskStatus( status ) } } className="flex flex-bottom m-0-5 p-0-5 bg-white shadow-blur pointer shadow-hover">
+                                                                <span className="block border-radius-50-pct" style={{ width: "18px", height: "18px", border: `5px solid ${ stateColors[ status.status_name ] }`}}/>
+                                                                <span className="block m-l-1 text-14-px">{ status.status_name }</span>
+                                                            </div>
+                                                        )
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+
                                     </div>
 
 
@@ -356,11 +433,23 @@ export default () => {
                                                     }}
 
 
-                                                        className="block w-100-pct text-16-px no-border border-1-bottom" value={ _task.task_description }
+                                                        className="block w-100-pct text-16-px no-border border-1-bottom"
+                                                        value={ _task.task_description }
+                                                        style={{ minHeight: 350 }}
                                                         onChange={ (e) => { _setTask({ ..._task, task_description: e.target.value }) } }
                                                     />
                                                     :
-                                                    <span className="block text-16-px">{ _task.task_description }</span>
+                                                    <div>
+                                                        { _task.task_description ? _task.task_description.split('\n').map( line =>
+                                                                <div>
+                                                                    { line ?
+                                                                        <span className="block w-100-pct text-16-px">{ line } </span>
+                                                                        :
+                                                                        <span className="block w-100-pct text-16-px p-0-5">{ line } </span>
+                                                                    }
+                                                                </div>
+                                                        ) : null }
+                                                    </div>
                                                 }
 
                                             </div>
