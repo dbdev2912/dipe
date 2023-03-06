@@ -1,7 +1,6 @@
 USE DIPE;
 
 DELIMITER $$
-/* HAHAHAHAHAHAHAHAHAHAHA fix procedure loi cai loz */
 DROP PROCEDURE IF EXISTS `table_add` $$
 CREATE PROCEDURE `table_add` ( IN in_table_name VARCHAR(255), IN in_project_id INT, IN in_table_alias VARCHAR(255) )
 BEGIN

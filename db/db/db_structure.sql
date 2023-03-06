@@ -49,7 +49,7 @@ CREATE TABLE `projects`
 (
 	`project_id` INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
     `project_code` VARCHAR(255) UNIQUE,
-    `project_name` TEXT DEFAULT "Dự án mới",
+    `project_name` TEXT,
     `project_master` VARCHAR(255) NOT NULL, -- FK
     `description` TEXT,
     `create_on` DATETIME DEFAULT NOW(),

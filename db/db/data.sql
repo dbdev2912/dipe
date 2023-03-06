@@ -1,31 +1,18 @@
 USE DIPE;
--- INSERT INTO ACCOUNTS VALUES
--- ('admin', '123', '1', 'admin_credential_string', 'admin'),
--- ('user', '123', '1', 'admin_credential_string_', 'user');
+INSERT INTO ACCOUNTS VALUES
+('becong', '$2b$10$19M48e3cMRi7xKUxxvHCjeMqkyoR.KUEvLREcpE2Bn5RRKGEPpqPK', '1', 'hihi1677919847542','admin'),
+('dung', '$2b$10$09SOqckYf0q3RIV3/Vk7tuoDg2ZRFEENoOuZEF6/G/Fh4D0FCLTk.', '1', 'hihi1677919762373','admin'),
+('mocuser', '$2b$10$GFdosm6tRaacuTpUsz6WFuxpQuUzSyVmKiNJOrcbJuxVlMdABDmwm', '1', 'hihi1677954787021','user'),
+('mrly', "$2b$10$Dwt1uqSjEJuwBBwXoPCa7u7v8LhUQoubX0GBJj03r3xTAl0LrP2U6", '1', 'hihi1677860542368','admin'),
+('msdiem', '$2b$10$rPv7JHXFwkF5NLZdkiVYe.AUjMnfNlFvKYp7eBB.hXlVr5Ullfvwm', '1', 'hihi1677860533409','admin'),
+('su', '$2b$10$ZoZXLc8PJ5u.vOtKb2NRUugjM6uJfh/lliGCUUPVeudupOOQktKWu', '1', 'hihi1677860156834','su'),
+('user1', '$2b$10$QrqXNRXoYzy67Rj.KS8jNuElzuphX17sjo52uX/kFQc3lZzTrHqW2', '1', 'hihi1677905804602','user');
 
--- INSERT INTO PARTNER VALUES
--- ('Công ty Cổ Phần Mỹ Lan', 'Khu công nghiệp Long Đức, Trà Vinh',
--- '+84 368 4746 01', 'mlg@photo.me', '7761 023 41', 
--- '/img/partner/icon.png'
--- );
-
--- INSERT INTO TABLES( table_name, table_alias ) VALUES
--- ('alias_khach_hang', 'KHÁCH HÀNG'),
--- ('alias_loai_san_pham', 'LOẠI SẢN PHẨM'),
--- ('alias_san_pham', 'SẢN PHẨM');
-
--- INSERT INTO FIELDS(table_id, field_name, field_alias, field_props, field_data_type, default_value) VALUES
--- (1, "ALIAS_MAKH", "Mã khách hàng", '{ "length": 255 }', "VARCHAR", ""),
--- (1, "ALIAS_HOTEN", "Họ tên", '{ "length": 255 }', "VARCHAR", ""),
--- (1, "ALIAS_SODT", "Số điện thọi", '{ "length": 25 }', "VARCHAR", ""),
--- (2, "ALIAS_MALSP", "Mã loại Sản phẩm", '{ "length": 255 }', "VARCHAR", ""),
--- (2, "ALIAS_TENLSP", "Tên loại sản phẩm", '{ "length": 255 }', "VARCHAR", ""),
--- (3, "ALIAS_MASP", "Mã sản phẩm", '{ "length": 255 }', "VARCHAR", ""),
--- (3, "ALIAS_MALSP_FK", "Mã loại sản phẩm", '{ "length": 255 }', "VARCHAR", ""),
--- (3, "ALIAS_TENSP", "Tên sản phẩm", '{ "length": 255 }', "VARCHAR", "");
-
--- INSERT INTO `_keys` ( field_id, key_type, reference_on ) VALUES
--- ( 1, 'primary', NULL ),
--- ( 4, 'primary', NULL ),
--- ( 6, 'primary', NULL ),
--- ( 7, 'foreign', 4 );
+INSERT INTO ACCOUNT_DETAIL VALUES
+('hihi1677860156834', 'Su', 'su@mlg.com', 'Still remains unknown', 'Nowhere', '/img/avatar/hihi1677860156834.png'),
+('hihi1677860533409', 'Hồng Diễm', 'diem.tran@mlg.com', '0369154524', 'Longduc Industrial Park, Travinh, Vietnam', '/img/avatar/hihi1677860533409.png'),
+('hihi1677860542368', 'Lý', 'ly.tran@mlg.com', '093993', 'Longduc Industrial Park, Travinh VietNam', '/img/avatar/hihi1677860542368.png'),
+('hihi1677905804602', 'Người dùng một', 'user1@mlg.com', 'Unknown phone number', 'Nowhere', '/img/avatar/hihi1677905804602.png'),
+('hihi1677919762373', 'Lê Dũng', 'dung.le@rynan.com', '01286619915', 'Longduc Industrial Park, Travinh, VietNam', '/img/avatar/hihi1677919762373.png'),
+('hihi1677919847542', 'Bé Công Nè', 'cong.huynh@mlg.com', '0368474601', 'Longduc Industrial Park, Travinh, Vietnam', '/img/avatar/hihi1677919847542.png'),
+('hihi1677954787021', 'Bé Mốc Chứ Ai', 'be.moc.usr@mlg.com', '036546578784', 'Longduc Industrial Park', '/img/avatar/hihi1677954787021.png');
