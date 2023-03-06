@@ -4,12 +4,15 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Navbar, Horizon } from '../../../navbar';
 
 import ProjectCard from './projectCard';
+import ProjectAddForm from './addproject';
 
 export default () => {
     const { urls, bottomUrls } = useSelector( state => state.navbarLinks.su )
     const { navState, unique_string, proxy } = useSelector( state => state );
+    const { credential_string } = useSelector( state => state.auth );
     const dispatch = useDispatch()
     const [ projects, setProjects ] = useState([])
+    const [ form, setForm ] = useState(0);
 
     useEffect( () => {
         dispatch({
@@ -24,6 +27,10 @@ export default () => {
             }
         })
     }, [])
+
+    const formSwitching = () => {
+        setForm( !form )
+    }
 
     return(
         <div className="fixed-default fullscreen main-bg overflow flex flex-no-wrap">
@@ -42,7 +49,7 @@ export default () => {
                                 <input className="no-border w-100-pct p-l-2" placeholder="Tìm kiếm dự án"/>
                             </div>
                             <div className="ml-auto">
-                                <button className="upper pointer block w-max-content white text-center p-t-0-5 p-b-0-5 p-l-1 p-r-1 no-border bg-green">Thêm mới</button>
+                                <button onClick={ formSwitching } className="upper pointer block w-max-content white text-center p-t-0-5 p-b-0-5 p-l-1 p-r-1 no-border bg-green">Thêm mới</button>
                             </div>
                         </div>
                     </div>
@@ -52,7 +59,7 @@ export default () => {
                     <div>
                         <div className="flex flex-no-wrap">
                             <div>
-                                <span className="block text-20-px">2 dự án</span>
+                                <span className="block text-20-px">{ projects.length } dự án</span>
                             </div>
 
                             <div className="flex flex-no-wrap ml-auto">
@@ -88,13 +95,20 @@ export default () => {
                     <div className="flex flex-wrap">
                         { projects.length > 0 && projects.map(project =>
                             <ProjectCard key={ project.project_id } project = { project }/>
-                        )}                        
+                        )}
                     </div>
 
 
 
                 </div>
             </div>
+            {
+                form ?
+                <ProjectAddForm formSwitching={ formSwitching } project_master={ credential_string }
+                    projects={ projects } setProjects={ setProjects }
+                />
+                : null
+            }
         </div>
     )
 }

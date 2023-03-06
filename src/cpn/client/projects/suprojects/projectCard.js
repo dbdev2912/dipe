@@ -34,6 +34,7 @@ export default (props) => {
             { /* PROJECT NAME AND CREATED DATE */ }
             <div className="m-t-2">
                 <span onClick={ redirectOrSomething } className="block text-20-px pointer underline-hover">{ project.project_name }</span>
+                <span className="block text-12-px bold m-r-1">{ project.project_code }</span>
                 <span className="block gray text-14-px">{ dateGenerator( project.create_on ) }</span>
             </div>
 

@@ -10,7 +10,7 @@ export default ( props ) => {
     const [ admins, setAdmins ] = useState([]);
     const [ users, setUsers ] = useState([]);
     const { unique_string, proxy } = useSelector( state => state );
-    const [ loaded, setLoaded ] = useState(true);
+    const [ loaded, setLoaded ] = useState(false);
 
     const [ selectedUsers, setSelectedUsers ] = useState([]);
 
