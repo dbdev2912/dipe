@@ -213,7 +213,13 @@ router.get('/project/:project_id', (req, res) => {
                                     INNER JOIN TASK_STATUS AS TS ON TS.STATUS_ID = T.TASK_STATE
                         WHERE PROJECT_ID = ${ project_id };
                     `
-                }
+                },
+                {
+                    name: "taskStates",
+                    query: `
+                        SELECT * FROM TASK_STATUS;
+                    `
+                },
             ]
 
             queryMultipleTime({}, queries, 0, ({ data }) => {
@@ -338,9 +344,28 @@ router.post('/project/tasks', (req, res) => {
 
 router.put('/project/task', (req, res) => {
     const { changes, credential_string, task_id } = req.body;
-    console.log({ changes, credential_string, task_id })
+    const queries = changes.map( change => {
+        return {
+            name: change.name,
+            query: `
+                UPDATE TASKS SET ${change.name} = '${ change.value }' WHERE TASK_ID = ${ task_id }
+            `
+        }
+    });
+    const histories = changes.map( change => {
+        return {
+            name: `history_${change.name}`,
+            query: `
+                INSERT INTO TASK_MODIFY( task_id, modified_by, modified_what, from_value, to_value )
+                VALUES ( ${ task_id }, '${ credential_string }', '${ change.modified_what }', '${ change.from_value }', '${ change.value }' )
+            `
+        }
+    })
 
-    res.status(200).send({ success: true })
+    queryMultipleTime({}, [ ...queries, ...histories ], 0, ({ data }) => {
+
+        res.status(200).send({ success: true })
+    })
 })
 
 module.exports = router;
