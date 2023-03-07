@@ -220,6 +220,16 @@ router.get('/project/:project_id', (req, res) => {
                         SELECT * FROM TASK_STATUS;
                     `
                 },
+                {
+                    name: "task_modify",
+                    query: `
+                        SELECT * FROM TASK_MODIFY AS TM
+                            INNER JOIN TASKS AS T ON T.TASK_ID = TM.TASK_ID
+                            INNER JOIN ACCOUNT_DETAIL AS AD ON AD.CREDENTIAL_STRING = TM.MODIFIED_BY
+                        WHERE PROJECT_ID = ${ project_id }
+                        ORDER BY MODIFIED_AT DESC
+                    `
+                },
             ]
 
             queryMultipleTime({}, queries, 0, ({ data }) => {
@@ -357,7 +367,7 @@ router.put('/project/task', (req, res) => {
             name: `history_${change.name}`,
             query: `
                 INSERT INTO TASK_MODIFY( task_id, modified_by, modified_what, from_value, to_value )
-                VALUES ( ${ task_id }, '${ credential_string }', '${ change.modified_what }', '${ change.from_value }', '${ change.value }' )
+                VALUES ( ${ task_id }, '${ credential_string }', '${ change.modified_what }', '${ change.modified.old }', '${ change.modified.new }' )
             `
         }
     })
