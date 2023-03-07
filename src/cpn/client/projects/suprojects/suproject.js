@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
 import $ from 'jquery';
-
+/* Listing history, version control */
 import { Navbar, Horizon } from '../../../navbar';
 import UserCard from '../../users/usercard';
 import AddUserDialog from './adduser';
