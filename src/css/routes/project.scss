@@ -26,3 +26,20 @@
 .users-box{
     height: calc(100% - 150px);
 }
+
+
+.table-view{
+    table{
+        border: 1px solid #ccc;
+        border-collapse: collapse;
+        .header{
+            background: #cacaca;
+
+        }
+        tbody{
+            td{
+                border-bottom: 1px solid #ccc;
+            }
+        }
+    }
+}
