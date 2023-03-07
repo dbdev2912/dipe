@@ -200,3 +200,18 @@ BEGIN
     END IF;
 END
 $$
+
+DROP PROCEDURE IF EXISTS ADD_TASK_MODIFY $$
+
+CREATE PROCEDURE ADD_TASK_MODIFY(
+	IN in_task_id INT,
+	IN in_modified_by VARCHAR(255),	
+	IN in_modified_what VARCHAR(255),
+	IN in_from_value TEXT,
+	IN in_to_value TEXT
+)
+BEGIN
+	INSERT INTO TASK_MODIFY( task_id, modified_by, modified_at, modified_what, from_value, to_value )
+    VALUES ( in_task_id, in_modified_by, NOW(), in_modified_what, in_from_value, in_to_value );
+END
+$$
