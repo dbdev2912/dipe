@@ -8,6 +8,10 @@ import { Navbar, Horizon } from '../../../navbar';
 import UserCard from '../../users/usercard';
 import AddUserDialog from './adduser';
 
+import TableView from '../../../widgets/tableView';
+
+/* Listing history, version control */
+
 export default () => {
     const { urls, bottomUrls } = useSelector( state => state.navbarLinks.su )
     const { project_id } = useParams()
@@ -23,7 +27,7 @@ export default () => {
         'SUSPEND': "#fff61e",
        }
 
-    const { navState, unique_string, proxy, defaultImage } = useSelector( state => state );
+    const { navState, unique_string, proxy, defaultImage, auth } = useSelector( state => state );
     const { dateGenerator, autoLabel, openTab } = useSelector( state => state.functions )
     const { credential_string, account_role } = useSelector( state => state.auth );
     const dispatch = useDispatch()
@@ -46,6 +50,10 @@ export default () => {
     const [ stateHeight, setStateHeight ] = useState(0);
     const [ statuses, setStatuses ] = useState([]);
     const [ oldStatus, setOldStatus ] = useState({})
+
+    const [ taskModify, setTaskModify ] = useState([])
+    const [ taskModifyTableView, setTaskModifyTableView] = useState([]);
+
     useEffect( () => {
         dispatch({
             type: "setNavBarHighLight",
@@ -55,12 +63,18 @@ export default () => {
 
         fetch(`${proxy}/api/${ unique_string }/projects/project/${project_id}`).then( res => res.json() )
         .then( resp => {
-            const { project, owner, partners, users, versions, tasks, taskStates } = resp.data;
+            const { project, owner, partners, users, versions, tasks, taskStates, task_modify } = resp.data;
             setProject(project);
             setOwner(owner[0]); setPartners(partners); setUsers(users);
             setTasks( tasks );
             setTask( tasks[0] )
             _setTask( tasks[0] )
+
+            const formatedTaskModify = task_modify.map( (change, index) => {
+                return { ...change, modified_on: dateGenerator( change.modified_at ), id: `ID_${index}` }
+            })
+            setTaskModify( formatedTaskModify )
+
             setVersions(versions);
             setStatuses(taskStates);
 
@@ -68,6 +82,11 @@ export default () => {
             setOldStatus( oldST );
         })
     }, [])
+
+    useEffect( () => {
+        const initialView = taskModify.filter( tsk => tsk.task_id == task.task_id );
+        setTaskModifyTableView( initialView != undefined? initialView: [] );
+    }, [ taskModify ])
 
     const removePartner = ( user ) => {
         const { credential_string, account_role } = user;
@@ -141,15 +160,46 @@ export default () => {
                     name: "task_label",
                     value: _task.task_label,
                     from_value: task.task_label,
+                    modified: {
+                        old: task.task_label,
+                        new: _task.task_label
+                    },
                     modified_what: "nhãn yêu cầu"
                 },
                 {
                     name: "task_description",
                     value: _task.task_description,
                     from_value: task.task_description,
+                    modified: {
+                        old: task.task_description,
+                        new: _task.task_description
+                    },
                     modified_what: "nội dung yêu cầu"
                 },
             ]
+
+            setTaskModify([
+                {
+                    task_id: task.task_id,
+                    modified_by: credential_string,
+                    modified_what: "nhãn yêu cầu",
+                    from_value: task.task_label,
+                    to_value: _task.task_label,
+                    modified_on: dateGenerator(new Date().toString()),
+                    id: `ID_${taskModify.length}`,
+                    ...auth
+                },
+                {
+                    task_id: task.task_id,
+                    modified_by: credential_string,
+                    modified_what: "nội dung yêu cầu",
+                    from_value: task.task_description,
+                    to_value: _task.task_description,
+                    modified_on: dateGenerator(new Date().toString()),
+                    id: `ID_${taskModify.length + 1}`,
+                    ...auth
+                }, ...taskModify
+            ])
 
             fetch(`${ proxy }/api/${ unique_string }/projects/project/task`, {
                 method: "PUT",
@@ -187,13 +237,32 @@ export default () => {
             const _task = { ...task, ...status };
             dropState();
             setTask({ ...task, ...status })
+            setOldStatus( status )
+
             const changes = [{
                     name: "task_state",
                     value: status.status_id,
                     from_value: oldStatus.status_id,
+                    modified: {
+                        old: oldStatus.status_name,
+                        new: status.status_name
+                    },
                     modified_what: "trạng thái của yêu cầu"
                 },
             ]
+
+            setTaskModify([
+                {
+                    task_id: task.task_id,
+                    modified_by: credential_string,
+                    modified_what: "trạng thái của yêu cầu",
+                    from_value: oldStatus.status_name,
+                    to_value:  status.status_name,
+                    modified_on: dateGenerator(new Date().toString()),
+                    id: `ID_${taskModify.length}`,
+                    ...auth
+                }, ...taskModify
+            ])
 
             fetch(`${ proxy }/api/${ unique_string }/projects/project/task`, {
                 method: "PUT",
@@ -214,6 +283,17 @@ export default () => {
             });
 
         }
+    }
+
+    const changeTask = ( task ) => {
+        setTask( task );
+        _setTask(task);
+        const { status_id, status_name } = task;
+        setStateHeight(0)
+        const newTaskModified = taskModify.filter( tsk => tsk.task_id == task.task_id )
+        setOldStatus({ status_id, status_name })
+
+        setTaskModifyTableView( [ ...newTaskModified ])
     }
 
     return(
@@ -259,10 +339,23 @@ export default () => {
                                 <div className="shadow-blur p-1">
                                     <span className="text-18-px">Các phiên bản</span>
                                 </div>
+
+                                <div className="flex flex-no-wrap shadow-blur">
+                                    <div className="fill-available p-1">
+                                        <input className="no-border w-100-pct" placeholder="Tìm kiếm"/>
+                                    </div>
+                                    { hasChangePri() ?
+                                        <div className="w-48-px flex flex-middle">
+                                            <button className="bold text-24-px no-border bg-green white border-radius-50-pct pointer" style={{ width: "32px", height: "32px" }}>+</button>
+                                        </div>
+                                        : null
+                                     }
+                                </div>
+
                                 <div className="fill-available p-0-5 overflow">
                                     {
                                         versions.map( ver =>
-                                            <div className="shadow-blur p-1">
+                                            <div key={ ver.version_id } onClick={ () => { openTab(`/su/project/${ project_id }/version/${ ver.version_id }`) } } className="shadow-blur p-1 shadow-hover pointer ease">
                                                 <div className="flex flex-wrap">
                                                     <div className="w-100-pct">
                                                         <span className="text-20-px block">{ ver.version_name }</span>
@@ -351,7 +444,7 @@ export default () => {
                                 <div className="fill-available overflow m-t-1">
 
                                     { tasks.map( task =>
-                                        <div key={task.task_id} onClick={ () => { setTask( task ); _setTask(task) } } className="block m-b-1 p-1 bg-white shadow-blur shadow-hover pointer">
+                                        <div key={task.task_id} onClick={ () => { changeTask( task ) } } className="block m-b-1 p-1 bg-white shadow-blur shadow-hover pointer">
                                             <span className="block text-20-px">{ task.task_label }</span>
                                             <div className="flex flex-no-wrap m-t-3">
                                                 <div className="fill-available">
@@ -478,7 +571,18 @@ export default () => {
                                         </div>
                                     </div>
 
+                                    { /* TASK MODIFY */ }
+                                    { taskModifyTableView.length > 0 ?
 
+                                    <TableView data={ taskModifyTableView } fields={[
+                                        { name: "Thay đổi lúc", alias: "modified_on" },
+                                        { name: "Bởi", alias: "fullname" },
+                                        { name: "Thay đổi", alias: "modified_what" },
+                                        { name: "Từ", alias: "from_value" },
+                                        { name: "Thành", alias: "to_value" },
+                                    ]} index={ "id" } maxRow={5}
+                                    /> : <span className="block text-16-px text-center p-2">Chưa có thay đổi nào cả</span>
+                                    }
 
                                     </div>
                                 </div>

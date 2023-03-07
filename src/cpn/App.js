@@ -11,7 +11,7 @@ import {
 import "../css/index.scss";
 
 import { Login, SignUp, SignOut } from './auth';
-import { Home, Projects, SuProjects, SuProject, SuUsers, SuUser } from './client';
+import { Home, Projects, SuProjects, SuProject, SuUsers, SuUser, Version } from './client';
 
 function App() {
     const dispatch = useDispatch()
@@ -57,6 +57,7 @@ function App() {
                 <Route exac path="/su/project/:project_id" element = { <SuProject /> } />
                 <Route exac path="/su/users" element = { <SuUsers /> } />
                 <Route exac path="/su/user/:credential_string" element = { <SuUser /> } />
+                <Route exac path="/su/project/:project_id/version/:version_id" element = { <Version /> } />
             </Routes>
         </Router>
     </React.StrictMode>

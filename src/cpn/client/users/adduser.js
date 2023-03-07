@@ -49,7 +49,6 @@ export default (props) => {
     const focusTrigger = () => {
         setHeight(135);
     }
-
     const submit = () => {
         if( user.pwd_string && user.account_string ){
             fetch(`${proxy}/${ unique_string }/create_user`,{
