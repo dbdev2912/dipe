@@ -384,7 +384,7 @@ export default () => {
                             <div className="w-100-pct column h-fit bg-white shadow-blur">
                                 <div className="shadow-blur flex flex-no-wrap">
                                     <div  onClick={ () => { setUserScrollView([ 1, 0 ]) } } className="pointer p-1 w-50-pct flex flex-middle">
-                                        <span className={`text-18-px ${ userScrollView[0] ? "": "gray" }`}>Partners</span>
+                                        <span className={`text-18-px ${ userScrollView[0] ? "": "gray" }`}>Nhóm triển khai</span>
                                     </div>
                                     <div  onClick={ () => { setUserScrollView([ 0, 1 ]) } } className="pointer p-1 w-50-pct flex flex-middle">
                                         <span className={`text-18-px ${ userScrollView[1] ? "": "gray" }`}>Người dùng</span>

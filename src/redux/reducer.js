@@ -4,7 +4,7 @@ import functions from './functions';
 
 const initState = {
     highlight: 0,
-    navState: true,
+    navState: localStorage.getItem('navState'),
     unique_string: "dipev1",
     defaultImage: "/assets/image/icon.png",
     proxy,
@@ -32,7 +32,8 @@ export default ( state = initState, action ) => {
 
 
         case "setNavState":
-            return setNavState(state, action);
+            // localStorage.setItem('navState', navState)
+            return setNavState(state, action);            
             break;
         case "initializedUserInfo":
             return initializedUserInfo( state, action );
