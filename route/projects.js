@@ -4,6 +4,8 @@ var router = express.Router();
 const { mysql } = require('../Connect/conect');
 const { id } = require('../module/modulars');
 
+const { TablesController } = require('../controller/tables-controller');
+
 const queryMultipleTime = ( data, queries, index, callback ) => {
 
     if( index === queries.length ){
@@ -211,7 +213,7 @@ router.get('/project/:project_id', (req, res) => {
                             INNER JOIN ACCOUNT_DETAIL AS AD
                                 ON T.TASK_OWNER = AD.CREDENTIAL_STRING
                                     INNER JOIN TASK_STATUS AS TS ON TS.STATUS_ID = T.TASK_STATE
-                        WHERE PROJECT_ID = ${ project_id };
+                        WHERE PROJECT_ID = ${ project_id } ORDER BY CHANGE_AT DESC;
                     `
                 },
                 {
@@ -375,6 +377,57 @@ router.put('/project/task', (req, res) => {
     queryMultipleTime({}, [ ...queries, ...histories ], 0, ({ data }) => {
 
         res.status(200).send({ success: true })
+    })
+})
+
+const getTableFields = ( tables, index, callback ) => {
+    if( index === tables.length ){
+        callback({ tablesDetail: tables })
+    }else{
+        tables[index].getFields(( { success, fields } ) => {
+            if( success ){
+                tables[index]["fields"] = fields.map( field => field.get() );
+                tables[index].getConstraints(({ constraints, success }) => {
+                    if( success ){
+                        tables[index]["constraint"] = constraints.map( constr => constr.get() )
+                    }
+                    getTableFields( tables, index + 1 , callback)
+                })
+            }else{
+                getTableFields( tables, index + 1 , callback)
+            }
+        })
+    }
+}
+
+router.get('/project/:project_id/ver/:version_id', (req, res) => {
+    const { project_id, version_id } = req.params;
+    const queries = [
+        {
+            name: "project",
+            query: `
+                SELECT * FROM PROJECTS WHERE PROJECT_ID = ${ project_id }
+            `
+        },
+        {
+            name: "version",
+            query: `
+                SELECT * FROM VERSIONs WHERE PROJECT_ID = ${ project_id } AND VERSION_ID = ${ version_id }
+            `
+        },
+    ]
+
+    queryMultipleTime({}, queries, 0, ({ data }) => {
+        const tablesController = new TablesController()
+        tablesController.getall_based_on_version_id( version_id , ({ success, tables }) => {
+            if( success ){
+                getTableFields( tables, 0, ({ tablesDetail }) => {
+                    res.send({ success: true, tablesDetail, data })
+                } )
+            }else{
+                res.send({ success: true, tablesDetail: [], data })
+            }
+        })
     })
 })
 

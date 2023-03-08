@@ -22,6 +22,21 @@ class TablesController {
             }
         })
     }
+
+    getall_based_on_version_id = ( version_id, callback ) => {
+        const query = `
+            SELECT * FROM TABLES WHERE VERSION_ID = ${ version_id };
+        `;
+        mysql( query, ( result ) =>  {
+            if( result.length == 0 ){
+                callback({ success: false })
+            }else{
+                const tables = result.map( table => new TableController( table ) )
+                callback( { success: true, tables } )
+            }
+        })
+    }
+
     getAllUsingCredentialString = ( credential_string ,callback ) => {
         const query = `
             SELECT * FROM TABLES WHERE credential_string = '${ credential_string }';
@@ -57,17 +72,17 @@ class TablesController {
             }
         })
     }
-    createTable = ({ table_name, credential_string }, callback) => {
+    createTable = ({ table_name, version_id }, callback) => {
         const table_alias = id();
         const query = `
-            CALL table_add( "${table_name}", "${ credential_string }", "${ table_alias }" );
+            CALL table_add( "${table_name}", "${ version_id }", "${ table_alias }" );
         `;
         // console.log(query);
         mysql( query, result =>{
             const { success, table_id } = result[0][0]
 
             if( success ){
-                callback( {success: true, table: new TableController( { table_id, table_name, table_alias, credential_string } )} ) /* Small bug need not to be hurry */
+                callback( {success: true, table: new TableController( { table_id, table_name, table_alias, version_id } )} ) /* Small bug need not to be hurry */
             }
             else{
                 callback({ success: false })

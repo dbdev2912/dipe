@@ -12,6 +12,7 @@ app.use(bodyparser.urlencoded({
 }));
 
 app.use( express.static('public') );
+
 app.use(bodyparser.json({ limit: "50mb" }));
 // app.use(morgan('combined'));
 // var connection = require('./Connect/Dbconnection');

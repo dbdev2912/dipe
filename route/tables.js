@@ -67,8 +67,8 @@ router.get('/table/:table_id', (req, res) => {
 
 router.post('/create', (req, res) => {
     const Tables = new TablesController();
-    const { table_name, credential_string } = req.body;
-    Tables.createTable({ table_name, credential_string }, ({ success, table }) => {
+    const { table_name, version_id } = req.body;
+    Tables.createTable({ table_name, version_id }, ({ success, table }) => {
         if (success) {
             res.status(200).json({ success: true, content: "Thêm bảng thành công", data: table });
         }
