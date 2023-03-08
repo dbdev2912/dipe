@@ -24,6 +24,10 @@ textarea{
     -webkit-tap-highlight-color: transparent;
 }
 
+input{
+    font-family: "UTM Avo", sans-serif !important;
+}
+
 
 
 *::-webkit-scrollbar{

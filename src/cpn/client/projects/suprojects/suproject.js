@@ -134,7 +134,7 @@ export default () => {
             body: JSON.stringify({ credential_string, project_id })
         }).then( res => res.json() ).then( data => {
             const { task } = data;
-            setTasks([...tasks, task]);
+            setTasks([task, ...tasks]);
         })
     }
 
