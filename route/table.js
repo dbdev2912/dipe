@@ -155,7 +155,7 @@ router.post('/create/field', (req, res) => {
         }
     })
 })
-///Xóa trường 
+///Xóa trường
 router.delete('/field_drop/:field_id', (req, res) => {
 
     const { field_id } = req.params;
@@ -167,7 +167,7 @@ router.delete('/field_drop/:field_id', (req, res) => {
         else{
               res.status(404).send( { success: false, content: "Xóa trường thất bại" });
         }
-      
+
     });
 })
 //xem ràng buộc của bảng
@@ -352,7 +352,9 @@ router.put('/modify/field', (req, res) => {
         field_data_type,
         default_value
     } = req.body;
-    console.log(req.body);
+
+    console.log(req.body)
+
     const Tables = new TablesController();
     const criteria = [{
         field: "table_id",
@@ -366,7 +368,7 @@ router.put('/modify/field', (req, res) => {
                     field.modify({
                         field_name,
                         nullable,
-                        field_props,
+                        field_props: JSON.parse( field_props ),
                         field_data_type,
                         default_value
                     }, ({ success, content, field }) => {

@@ -69,7 +69,7 @@ class TableController {
             const { field_name, nullable, field_props, field_data_type, default_value } = fieldRaw;
             const field_alias = id(); /* This is supposed to be unique */
             const query =`
-                CALL add_field(${ this.table_id }, '${field_name}', '${field_alias}', ${nullable}, '${field_data_type}', '${JSON.stringify(field_props)}', '${ default_value }');
+                CALL add_field(${ this.table_id }, '${field_name}', '${field_alias}', ${nullable}, '${field_data_type}', '${JSON.stringify({ props: field_props })}', '${ default_value }');
             `;
             mysql( query, (result) => {
                 const { success, content } = result[0][0];

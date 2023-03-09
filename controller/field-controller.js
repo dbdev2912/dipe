@@ -20,8 +20,10 @@ class FieldController {
 
     modify = ( { field_name, nullable, field_props, field_data_type, default_value }, callback ) => {
         const query = `
-            CALL modify_field(${ this.field_id }, '${ field_name }', ${ nullable }, '${ field_data_type }', '${ JSON.stringify(field_props) }', '${ default_value }')
+            CALL modify_field(${ this.field_id }, '${ field_name }', ${ nullable }, '${ field_data_type }', '${ JSON.stringify({ props: field_props }) }', '${ default_value }')
         `;
+
+        console.log(query)
         mysql( query, (result) => {
             const { success, content } = result[0];
             if( success ){
