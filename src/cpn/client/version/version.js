@@ -40,10 +40,13 @@ export default () => {
                     if( constraint!= undefined ){
                         field.constraints = constraint.filter( constr => constr.field_id === field.field_id )
                     }
-                    return field
+                    const props = JSON.parse( field.field_props )
+
+                    return { ...field, ...props }
                 })
                 return table;
             });
+            console.log(tables)
 
             setTables( tables );
             setProject( project[0] )
@@ -66,6 +69,35 @@ export default () => {
 
     const createTable = () => {
 
+    }
+
+    const updateFields = ( type, field ) => {
+        switch (type) {
+            case "update":
+
+                const newFields = table.fields.map( f => {
+                    if( f.field_id === field.field_id ){
+                        return field
+                    }
+                    return f;
+                })
+                const newTable = { ...table, fields: newFields }
+                setTable( newTable )
+
+                const newTables = tables.map(tb => {
+                    if( tb.table_id === newTable.table_id ){
+                        return newTable
+                    }else{
+                        return tb
+                    }
+                })
+
+                setTables( newTables )
+
+                break;
+            default:
+                break;
+        }
     }
 
     return(
@@ -125,7 +157,7 @@ export default () => {
 
 
                                 <div className="fill-available overflow m-t-1">
-                                { tables.map( table =>
+                                { tables.length > 0 && tables.map( table =>
                                     <div key={table.table_id} onClick={ () => { changeTable( table ) } } className="block m-b-1 p-1 bg-white shadow-blur shadow-hover pointer">
                                         <span className="block text-20-px">{ table.table_name }</span>
                                         <div className="flex flex-no-wrap m-t-3">
@@ -142,6 +174,7 @@ export default () => {
 
 
                                     {/* TABLE HEADER */}
+                                    {tables.length > 0 &&
                                     <div className="p-0-5">
                                         <div className="flex rel">
                                             <div className="flex flex-bottom w-100-pct">
@@ -164,13 +197,38 @@ export default () => {
                                         <hr className="block border-1-top"/>
 
                                         <div className="block">
+                                            <div className="flex flex-no-wrap bg-white shadow-blur">
+                                                <div className="fill-available p-1">
+                                                    <input className="no-border text-16-px w-100-pct" placeholder="Tìm kiếm ..."/>
+                                                </div>
+                                                <div className="w-48-px flex flex-middle">
+                                                    <button onClick={ createTable } className="bold text-24-px no-border bg-green white border-radius-50-pct pointer" style={{ width: "32px", height: "32px" }}>+</button>
+                                                </div>
+                                            </div>
+                                            <div className="rel m-t-1">
+                                                <div className="field-drop p-1 bg-white shadow-blur w-100-pct" >
+                                                    <div className="flex flex-no-wrap">
+                                                        <div className="fill-available">
+                                                            <span className="block bold text-16-px upper">Tên trường</span>
+                                                        </div>
+                                                        <div className="w-25-pct">
+                                                            <span className="block bold text-16-px upper">Kiểu</span>
+                                                        </div>
+                                                        <div className="w-24-px flex flex-middle">
+                                                            <span className="block bold text-16-px upper">NULL</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                             { table.fields && table.fields.map( field =>
-                                                <Field key={ field.field_id } field={ field }/>
+                                                <Field key={ field.field_id } field={ field } tables={ tables } table={ table } updateFields={ updateFields } />
                                             ) }
                                         </div>
 
 
                                     </div>
+                                    }
 
 
 
