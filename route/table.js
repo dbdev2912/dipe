@@ -248,26 +248,26 @@ router.delete('/dropall/constraints', (req, res) => {
     })
 })
 ///// xóa bảng
-// router.delete('/drop/:table_id', (req, res) => {
+router.delete('/drop/:table_id', (req, res) => {
 
-//     const { table_id } = req.params;
+    const { table_id } = req.params;
 
-//     const Tables = new TablesController();
-//     const criteria = [{
-//         field: "table_id",
-//         value: table_id,
-//         fomula: "="
-//     }]
-//     Tables.getone(criteria, ({ success, table }) => {
-//         if (success) {
-//             table.drop(({ success }) => {
-//                 res.send({ success: true, content: "Xóa thành công " })
-//             })
-//         } else {
-//             res.send({ success: false, content: `Không tìm thấy bảng có ID: ${table_id}` })
-//         }
-//     })
-// })
+    const Tables = new TablesController();
+    const criteria = [{
+        field: "table_id",
+        value: table_id,
+        fomula: "="
+    }]
+    Tables.getone(criteria, ({ success, table }) => {
+        if (success) {
+            table.drop(({ success }) => {
+                res.send({ success: true, content: "Xóa thành công " })
+            })
+        } else {
+            res.send({ success: false, content: `Không tìm thấy bảng có ID: ${table_id}` })
+        }
+    })
+})
 
 ///// Xóa ràng 1 buộcc
 router.delete('/drop_id/constraints', (req, res) => {
