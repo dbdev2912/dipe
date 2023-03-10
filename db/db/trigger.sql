@@ -19,6 +19,7 @@ CREATE TRIGGER AUTO_DROP_DEFAULT_VALUE_BEFORE_DROPPING_FIELD
 BEFORE DELETE ON `fields`
 FOR EACH ROW
 BEGIN
+	DELETE FROM `constraints` WHERE field_id = OLD.field_id OR reference_on = OLD.field_id;
     DELETE FROM `default_value` WHERE field_id = OLD.field_id;
 END
 $$
