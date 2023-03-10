@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { Navbar, Horizon } from '../../navbar';
 import Field  from './table-field';
+import $ from 'jquery';
 
 const cardMinHeight = 400;
 
@@ -21,7 +22,7 @@ export default () => {
     const [ table, setTable ] = useState({});
     const [ _table, _setTable ] = useState({});
 
-    const [ tableState, setTableState ] = useState(false);
+    const [ tableState, setTableState ] = useState(true);
 
     useEffect( () => {
         dispatch({
@@ -36,17 +37,18 @@ export default () => {
 
             const tables = tablesDetail.map( table => {
                 const { constraint, fields } = table;
-                table.fields = fields.map( field => {
-                    if( constraint!= undefined ){
-                        field.constraints = constraint.filter( constr => constr.field_id === field.field_id )
-                    }
-                    const props = JSON.parse( field.field_props )
+                if( table.fields != undefined ){
+                    table.fields = fields.map( field => {
+                        if( constraint!= undefined ){
+                            field.constraints = constraint.filter( constr => constr.field_id === field.field_id )
+                        }
+                        const props = JSON.parse( field.field_props )
 
-                    return { ...field, ...props }
-                })
+                        return { ...field, ...props }
+                    })
+                }
                 return table;
             });
-            console.log(tables)
 
             setTables( tables );
             setProject( project[0] )
@@ -64,40 +66,163 @@ export default () => {
     }
 
     const tableStateSwitch = () => {
-        setTableState( !tableState )
+        if( !tableState ){
+            setTableState( !tableState )
+            const { table_name, table_id } = table;
+            fetch(`${proxy}/api/${ unique_string }/tables/modify`, {
+                method: "PUT",
+                headers: {
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({ table_name, table_id })
+            }).then(res => res.json()).then( res => {
+
+            })
+        }else{
+            setTableState( !tableState )
+        }
     }
+
+    const tableNameEnterTrigger = (e) => {
+        if( e.keyCode === 13 ){
+            tableStateSwitch()
+        }
+    }
+
+    useEffect(() => {
+
+        $('#table-name').focus();
+
+    }, [ tableState ])
 
     const createTable = () => {
 
+        const newTable = {
+            table_name: "Bảng mới",
+            version_id
+        }
+        fetch(`${proxy}/api/${ unique_string }/tables/create`, {
+            method: "POST",
+            headers: {
+                "content-type": "application/json"
+            },
+            body: JSON.stringify(newTable)
+        }).then( res => res.json() ).then( res => {
+            const { success, content, data } = res;
+            const date = new Date()
+            const _table = { ...data, field: [], create_on: date.toString() }
+            setTables( [...tables, _table] );
+            setTable( _table );
+        })
+    }
+
+    const createField = () => {
+
+        const { table_id } = table;
+
+        const newField = {
+            table_id,
+            field_name: "Trường mới",
+            nullable: true,
+            field_data_type: "VARCHAR",
+            field_props: { "LENGTH": 255},
+            default_value: "",
+        }
+
+        fetch( `${proxy}/api/${ unique_string }/table/create/field`, {
+            method: "POST",
+            headers: {
+                "content-type": "application/json"
+            },
+            body: JSON.stringify(newField)
+        }).then( res => res.json() ).then( res => {
+            const { success, content, data } = res;
+            const _field = { ...data, props: JSON.parse( data.field_props ) }
+
+            updateFields("add", _field)
+        })
+    }
+
+    const _updateFields = (type, field) => {
+        const newFields = table.fields.map( f => {
+            if( f.field_id === field.field_id ){
+                return field
+            }
+            return f;
+        })
+        const newTable = { ...table, fields: newFields }
+        setTable( newTable )
+
+        const newTables = tables.map(tb => {
+            if( tb.table_id === newTable.table_id ){
+                return newTable
+            }else{
+                return tb
+            }
+        })
+
+        setTables( newTables )
+    }
+
+    const _addFields = ( type, field ) => {
+        const newFields = table.fields ? [...table.fields, field] : [ field ];
+
+        const newTable = { ...table, fields: newFields }
+        setTable( newTable )
+
+        const newTables = tables.map(tb => {
+            if( tb.table_id === newTable.table_id ){
+                return newTable
+            }else{
+                return tb
+            }
+        })
+
+        setTables( newTables )
+    }
+
+    const _removeField = ( type, field ) => {
+        const newFields = table.fields.filter( f => f.field_id != field.field_id );
+        const newTable = { ...table, fields: newFields }
+
+        setTable( newTable )
+        const newTables = tables.map(tb => {
+            if( tb.table_id === newTable.table_id ){
+                return newTable
+            }else{
+                return tb
+            }
+        })
+        setTables( newTables )
     }
 
     const updateFields = ( type, field ) => {
         switch (type) {
             case "update":
-
-                const newFields = table.fields.map( f => {
-                    if( f.field_id === field.field_id ){
-                        return field
-                    }
-                    return f;
-                })
-                const newTable = { ...table, fields: newFields }
-                setTable( newTable )
-
-                const newTables = tables.map(tb => {
-                    if( tb.table_id === newTable.table_id ){
-                        return newTable
-                    }else{
-                        return tb
-                    }
-                })
-
-                setTables( newTables )
-
+                _updateFields( type, field )
+                break;
+            case "add":
+                _addFields( type, field )
+                break;
+            case "remove":
+                _removeField( type, field )
                 break;
             default:
                 break;
         }
+    }
+
+    const removeTable = ( table ) => {
+        const { table_id } = table;
+
+        fetch(`${ proxy }/api/${ unique_string }/tables/drop/${ table_id }`, {
+            method: "DELETE",
+        }).then( res => res.json() ).then( res => {
+            const newTables = tables.filter( tb => tb.table_id !== table_id );
+
+            setTables( newTables );
+            setTable( newTables[ newTables.length - 1 ] )
+        })
     }
 
     return(
@@ -158,8 +283,11 @@ export default () => {
 
                                 <div className="fill-available overflow m-t-1">
                                 { tables.length > 0 && tables.map( table =>
-                                    <div key={table.table_id} onClick={ () => { changeTable( table ) } } className="block m-b-1 p-1 bg-white shadow-blur shadow-hover pointer">
+                                    <div key={table.table_id} onClick={ () => { changeTable( table ) } } className="table-hover rel block m-b-1 p-1 bg-white shadow-blur shadow-hover pointer">
                                         <span className="block text-20-px">{ table.table_name }</span>
+                                        <div className="abs r-0 t-0 p-0-5" onClick={ () => { removeTable(table) } }>
+                                            <img className="w-20-px ease" src="/assets/icon/cross-color.png" />
+                                        </div>
                                         <div className="flex flex-no-wrap m-t-3">
                                             <div className="fill-available">
                                                 <span className="block text-14-px gray">{ dateGenerator(table.create_on) }</span>
@@ -178,12 +306,13 @@ export default () => {
                                     <div className="p-0-5">
                                         <div className="flex rel">
                                             <div className="flex flex-bottom w-100-pct">
-                                                { tableState ?
-                                                    <input className="block text-20-px no-border w-100-pct" value={ _table.table_name }
-                                                        onChange={ (e) => { _setTable({ ..._table, table_name: e.target.value }) } }
+                                                { !tableState ?
+                                                    <input id="table-name" className="block text-20-px no-border w-100-pct" value={ table.table_name }
+                                                        onChange={ (e) => { setTable({ ...table, table_name: e.target.value }) } }
+                                                        onKeyUp = { tableNameEnterTrigger }
                                                     />
                                                     :
-                                                    <span className="block text-20-px">{ _table.table_name }</span>
+                                                    <span className="block text-20-px">{ table.table_name }</span>
                                                 }
                                             </div>
                                             <div className="w-32-px">
@@ -201,9 +330,12 @@ export default () => {
                                                 <div className="fill-available p-1">
                                                     <input className="no-border text-16-px w-100-pct" placeholder="Tìm kiếm ..."/>
                                                 </div>
-                                                <div className="w-48-px flex flex-middle">
-                                                    <button onClick={ createTable } className="bold text-24-px no-border bg-green white border-radius-50-pct pointer" style={{ width: "32px", height: "32px" }}>+</button>
-                                                </div>
+                                                { table.fields  ?
+                                                    <div className="w-48-px flex flex-middle">
+                                                        <button onClick={ createField } className="bold text-24-px no-border bg-green white border-radius-50-pct pointer" style={{ width: "32px", height: "32px" }}>+</button>
+                                                    </div>
+                                                    : null
+                                                 }
                                             </div>
                                             <div className="rel m-t-1">
                                                 <div className="field-drop p-1 bg-white shadow-blur w-100-pct" >
@@ -221,9 +353,19 @@ export default () => {
                                                 </div>
                                             </div>
 
-                                            { table.fields && table.fields.map( field =>
+                                            { table.fields ? table.fields.map( field =>
                                                 <Field key={ field.field_id } field={ field } tables={ tables } table={ table } updateFields={ updateFields } />
-                                            ) }
+
+                                            ) :
+                                            <div className="block m-t-1 p-1 w-100-pct ml-auto">
+                                                <div className="flex flex-wrap w-100-pct flex-middle" style={{ height: 100 }}>
+                                                    <span className="text-16-px gray w-100-pct block text-center">Chưa có trường nào trên bảng này</span>
+                                                    <div className="w-48-px flex flex-middle">
+                                                        <button onClick={ createField } className="bold text-24-px no-border bg-green white border-radius-50-pct pointer" style={{ width: "32px", height: "32px" }}>+</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            }
                                         </div>
 
 

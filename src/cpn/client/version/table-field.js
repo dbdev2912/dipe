@@ -6,6 +6,8 @@ import fieldProps from './field-props';
 import $ from 'jquery';
 import { BOOL, NUMBER, STRING } from './props-input';
 
+import Constraint from './constraint';
+
 const boxHeight = 350;
 
 export default ( props ) => {
@@ -78,7 +80,7 @@ export default ( props ) => {
     }
 
     const createConstraint = () => {
-
+        console.log( "create constraint" )
     }
 
 
@@ -92,6 +94,7 @@ export default ( props ) => {
                 return "Khóa ngoại"
                 break;
             default:
+                return "Kiểm soát giá trị"
                 break;
         }
 
@@ -142,9 +145,24 @@ export default ( props ) => {
             },
             body: JSON.stringify({...data, table_id, field_props: JSON.stringify( data.props ) })
         }).then( res => res.json() ).then( res => {
-            console.log(res)
+            setDrop(!drop)
         })
     }
+
+    const deleteField = () => {
+        updateFields( "remove", field );
+        const { table_id } = table;
+        fetch(`${ proxy }/api/${ unique_string }/table/field_drop/${ field.field_id }`, {
+            method: "DELETE",
+            headers: {
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({...data, table_id, field_props: JSON.stringify( data.props ) })
+        }).then( res => res.json() ).then( res => {
+
+        })
+    }
+
 
     return(
         <div className="rel m-t-1">
@@ -245,7 +263,7 @@ export default ( props ) => {
 
                                     <span className="block text-16-px">Các ràng buộc và khóa</span>
                                     {/* SEARCH AND ADD */}
-                                    <div className="flex flex-no-wrap bg-white shadow-blur">
+                                    <div className="flex flex-no-wrap bg-white shadow-blur m-t-1">
                                         <div className="fill-available p-1">
                                             <input className="no-border text-16-px w-100-pct" placeholder="Tìm kiếm ..."/>
                                         </div>
@@ -261,41 +279,42 @@ export default ( props ) => {
                                                     <span className="block bold text-16-px upper">Loại ràng buộc</span>
                                                 </div>
                                                 <div className="fill-available">
-                                                    <span className="block bold text-16-px upper">Thuộc bảng</span>
+                                                    <span className="block text-16-px bold upper">Trên trường</span>
                                                 </div>
                                                 <div className="w-25-pct">
-                                                    <span className="block text-16-px bold upper">Trên trường</span>
+                                                    <span className="block bold text-16-px upper">Thuộc bảng</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                     { field.constraints.map( constraint =>
-                                        <div className="rel m-t-1 ml-auto">
-                                            <div className="field-drop p-1 bg-white shadow-blur w-100-pct pointer shadow-hover" >
-                                                <div className="flex flex-no-wrap">
-                                                    <div className="w-25-pct">
-                                                        <span className="block text-16-px">{ renderContraintType(constraint.constraint_type) }</span>
-                                                    </div>
-                                                    <div className="fill-available">
-                                                        <span className="block text-16-px">{ renderTableName(constraint.reference_on) }</span>
-                                                    </div>
-                                                    <div className="w-25-pct">
-                                                    { constraint.reference_on != -1 ?
-                                                        <span className="block text-16-px">{ renderFieldName(constraint.reference_on) }</span>
-                                                        :
-                                                        <span className="block text-16-px">{ "" }</span>
-                                                    }
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <Constraint constraint = { constraint } key={constraint.constraint_id}
+                                            renderContraintType = { renderContraintType }
+                                            renderTableName = { renderTableName }
+                                            renderFieldName = { renderFieldName }
+                                            tables={ tables }
+
+                                        />
                                     )}
                                 </div>
-                            : null
+                            :
+                                <div className="block m-t-1 p-1 w-100-pct ml-auto">
+                                    <div className="flex flex-wrap w-100-pct flex-middle" style={{ height: 100 }}>
+                                        <span className="text-16-px gray w-100-pct block text-center">Chưa có ràng buộc nào trên trường này</span>
+                                        <div className="w-48-px flex flex-middle">
+                                            <button onClick={ createConstraint } className="bold text-24-px no-border bg-green white border-radius-50-pct pointer" style={{ width: "32px", height: "32px" }}>+</button>
+                                        </div>
+                                    </div>
+                                </div>
                         }
 
-                        <div className="w-100-pct p-1">
-                            <button onClick={ submitChange } className="w-max-content p-0-5 p-l-1 p-r-1 bg-theme-color no-border block text-16-px white pointer shadow-blur shadow-hover ml-auto">Lưu thay đổi</button>
+                        <div className="flex flex-no-wrap w-100-pct flex-end">
+                            <div className="p-1">
+                                <button onClick={ deleteField } className="w-max-content p-0-5 p-l-1 p-r-1 shadow-blur shadow-hover bg-crimson no-border block text-16-px white pointer shadow-blur shadow-hover">Xóa trường</button>
+                            </div>
+                            <div className="p-1">
+                                <button onClick={ submitChange } className="w-max-content p-0-5 p-l-1 p-r-1 shadow-blur shadow-hover bg-theme-color no-border block text-16-px white pointer shadow-blur shadow-hover">Lưu thay đổi</button>
+                            </div>
                         </div>
 
 

@@ -43,3 +43,16 @@
         }
     }
 }
+
+
+.table-hover{
+    img{
+        opacity: 0;
+    }
+
+    &:hover{
+        img{
+            opacity: 1;
+        }
+    }
+}
