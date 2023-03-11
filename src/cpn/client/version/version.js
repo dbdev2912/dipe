@@ -5,6 +5,8 @@ import { Navbar, Horizon } from '../../navbar';
 import Field  from './table-field';
 import $ from 'jquery';
 
+import AddConstraint from './add-constraint';
+
 const cardMinHeight = 400;
 
 export default () => {
@@ -14,13 +16,14 @@ export default () => {
 
     const { urls, bottomUrls } = useSelector( state => state.navbarLinks.su )
     const { dateGenerator, autoLabel, openTab } = useSelector( state => state.functions )
-    const { navState, unique_string, proxy } = useSelector( state => state );
+    const { navState, unique_string, proxy, addConstraintBox } = useSelector( state => state );
 
     const [ project, setProject ] = useState({})
     const [ version, setVersion ] = useState({})
     const [ tables, setTables ] = useState([]);
     const [ table, setTable ] = useState({});
     const [ _table, _setTable ] = useState({});
+
 
     const [ tableState, setTableState ] = useState(true);
 
@@ -57,8 +60,36 @@ export default () => {
             _setTable( tablesDetail[0] )
         })
 
-
     }, [])
+
+    const reInitialization = () => {
+        fetch(`${ proxy }/api/${ unique_string }/projects/project/${project_id}/ver/${version_id}`)
+        .then( res => res.json() ).then( res => {
+            const { project, version } = res.data;
+            const { tablesDetail } = res;
+
+            const tables = tablesDetail.map( table => {
+                const { constraint, fields } = table;
+                if( table.fields != undefined ){
+                    table.fields = fields.map( field => {
+                        if( constraint!= undefined ){
+                            field.constraints = constraint.filter( constr => constr.field_id === field.field_id )
+                        }
+                        const props = JSON.parse( field.field_props )
+
+                        return { ...field, ...props }
+                    })
+                }
+                return table;
+            });
+
+            setTables( tables );
+            setProject( project[0] )
+            setVersion( version[0] )
+            setTable( tablesDetail[0] )
+            _setTable( tablesDetail[0] )
+        })
+    }
 
     const changeTable = (table) => {
         setTable(table)
@@ -228,7 +259,7 @@ export default () => {
     return(
         <div className="fixed-default fullscreen main-bg overflow flex flex-no-wrap">
             <Navbar urls={ urls } bottomUrls={ bottomUrls } />
-            <div className={`app fixed-default overflow ${ !navState ? "app-stretch": "app-scaled" }`} style={{ height: "100vh" }}>
+            <div id="app-container" className={`app fixed-default overflow ${ !navState ? "app-stretch": "app-scaled" }`} style={{ height: "100vh" }}>
                 <Horizon />
 
                 <div className="p-1">
@@ -354,7 +385,12 @@ export default () => {
                                             </div>
 
                                             { table.fields ? table.fields.map( field =>
-                                                <Field key={ field.field_id } field={ field } tables={ tables } table={ table } updateFields={ updateFields } />
+                                                <Field  key={ field.field_id } field={ field }
+                                                        tables={ tables }
+                                                        table={ table }
+                                                        updateFields={ updateFields }
+                                                        reInitialization={ reInitialization }
+                                                        />
 
                                             ) :
                                             <div className="block m-t-1 p-1 w-100-pct ml-auto">
@@ -386,6 +422,10 @@ export default () => {
                 </div>
 
             </div>
+            { addConstraintBox ?
+                <AddConstraint tables={ tables } currentTable={ table } updateFields={updateFields}/>
+                : null
+             }
         </div>
     )
 }

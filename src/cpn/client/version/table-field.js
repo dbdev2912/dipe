@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 
 
 import fieldProps from './field-props';
@@ -7,18 +7,18 @@ import $ from 'jquery';
 import { BOOL, NUMBER, STRING } from './props-input';
 
 import Constraint from './constraint';
-
 const boxHeight = 350;
 
 export default ( props ) => {
-    const { field, updateFields, fields, tables, table } = props;
+    const { field, updateFields, fields, tables, table, readOnly, reInitialization } = props;
     const [ drop, setDrop ] = useState( false )
     const [ type, setType ] = useState({})
     const [ data, setData ] = useState( field )
     const [ height, setHeight ] = useState(0);
     const [ typesHeight, setTypesHeight ] = useState(0);
 
-    const { unique_string, proxy } = useSelector( state => state );
+    const { unique_string, proxy, zIndex, navState } = useSelector( state => state );
+    const dispatch = useDispatch()
 
     const blurTrigger = (e) => {
             e.preventDefault();
@@ -29,6 +29,16 @@ export default ( props ) => {
 
     const focusTrigger = () => {
         setHeight(200);
+    }
+
+    const fieldDrop = () => {
+        if( !readOnly ){
+            dispatch({
+                type: "setDefaultField",
+                payload: { defaultField: field }
+            })
+            setDrop(!drop)
+        }
     }
 
     const changeType = (type) => {
@@ -79,8 +89,10 @@ export default ( props ) => {
         )
     }
 
-    const createConstraint = () => {
-        console.log( "create constraint" )
+    const constraintAddSwitching = () => {
+        dispatch({
+            type: "setAddConstraintBox",
+        })
     }
 
 
@@ -101,10 +113,12 @@ export default ( props ) => {
     }
     const renderTableName = ( reference_on ) => {
         const refTable = tables.map( table => {
-            const refField = table.fields.filter( field => field.field_id === reference_on );
+            if( table.fields != undefined ){
+                const refField = table.fields.filter( field => field.field_id === reference_on );
 
-            if( refField.length > 0 ){
-                return table
+                if( refField.length > 0 ){
+                    return table
+                }
             }
         });
 
@@ -119,10 +133,12 @@ export default ( props ) => {
     }
     const renderFieldName = ( reference_on ) => {
         const refTable = tables.map( table => {
-            const refField = table.fields.filter( field => field.field_id === reference_on );
+            if(table.fields != undefined){
+                const refField = table.fields.filter( field => field.field_id === reference_on );
 
-            if( refField.length > 0 ){
-                return refField[0]
+                if( refField.length > 0 ){
+                    return refField[0]
+                }
             }
         });
 
@@ -163,10 +179,23 @@ export default ( props ) => {
         })
     }
 
+    const removeConstraint = ( constraint_id ) => {
+        const { table_id } = table;
+
+        fetch(`${ proxy }/api/${ unique_string }/table/drop_id/constraints`, {
+            method: "DELETE",
+            headers: {
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({ table_id, constraint_id })
+        }).then( res => res.json() ).then( res => {
+            reInitialization()
+        })
+    }
 
     return(
         <div className="rel m-t-1">
-            <div className="field-drop p-1 bg-white shadow-blur w-100-pct pointer shadow-hover" onClick={ ()=>{ setDrop(!drop)} } >
+            <div className="field-drop p-1 bg-white shadow-blur w-100-pct pointer shadow-hover" onClick={ fieldDrop } >
                 <div className="flex flex-no-wrap">
                     <div className="fill-available">
                         <span className="block text-16-px">{ field.field_name }</span>
@@ -268,7 +297,7 @@ export default ( props ) => {
                                             <input className="no-border text-16-px w-100-pct" placeholder="Tìm kiếm ..."/>
                                         </div>
                                         <div className="w-48-px flex flex-middle">
-                                            <button onClick={ createConstraint } className="bold text-24-px no-border bg-green white border-radius-50-pct pointer" style={{ width: "32px", height: "32px" }}>+</button>
+                                            <button onClick={ constraintAddSwitching } className="bold text-24-px no-border bg-green white border-radius-50-pct pointer" style={{ width: "32px", height: "32px" }}>+</button>
                                         </div>
                                     </div>
                                     {/* HEADER */}
@@ -276,7 +305,7 @@ export default ( props ) => {
                                         <div className="field-drop p-1 bg-white shadow-blur w-100-pct" >
                                             <div className="flex flex-no-wrap">
                                                 <div className="w-25-pct">
-                                                    <span className="block bold text-16-px upper">Loại ràng buộc</span>
+                                                    <span className="block bold text-16-px upper">Ràng buộc</span>
                                                 </div>
                                                 <div className="fill-available">
                                                     <span className="block text-16-px bold upper">Trên trường</span>
@@ -293,6 +322,7 @@ export default ( props ) => {
                                             renderTableName = { renderTableName }
                                             renderFieldName = { renderFieldName }
                                             tables={ tables }
+                                            removeConstraint = { removeConstraint }
 
                                         />
                                     )}
@@ -302,7 +332,7 @@ export default ( props ) => {
                                     <div className="flex flex-wrap w-100-pct flex-middle" style={{ height: 100 }}>
                                         <span className="text-16-px gray w-100-pct block text-center">Chưa có ràng buộc nào trên trường này</span>
                                         <div className="w-48-px flex flex-middle">
-                                            <button onClick={ createConstraint } className="bold text-24-px no-border bg-green white border-radius-50-pct pointer" style={{ width: "32px", height: "32px" }}>+</button>
+                                            <button onClick={ constraintAddSwitching } className="bold text-24-px no-border bg-green white border-radius-50-pct pointer" style={{ width: "32px", height: "32px" }}>+</button>
                                         </div>
                                     </div>
                                 </div>

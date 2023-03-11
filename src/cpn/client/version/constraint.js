@@ -6,7 +6,9 @@ export default (props) => {
     const { constraint,
             renderContraintType,
             renderTableName,
-            renderFieldName } = props;
+            renderFieldName,
+            removeConstraint
+        } = props;
 
     const [ data, setData ] = useState( constraint );
     const [ drop, setDrop ] = useState(0);
@@ -16,7 +18,6 @@ export default (props) => {
         const { type, value } = newValue;
         const newData = { ...data }
         newData[type] = value;
-        console.log( newData )
         setData( newData )
     }
 
@@ -39,22 +40,17 @@ export default (props) => {
                             <span className="block text-16-px">{ renderTableName(data.reference_on) }</span>
                         </div>
                     </div>
-
-                    <div className="w-32-px flex flex-middle">
-                        { drop ?
-                            <img className="w-20-px block" src="/assets/icon/check.png"/>
-                            : null
-                        }
-                    </div>
-                    <div className="w-32-px flex flex-middle">
-                        { drop ?
-                            <img className="w-20-px block" src="/assets/icon/cross-error.png"/>
-                            : null
-                        }
+                    <div className="abs r-0 t-0 flex h-fit">
+                        <div className="w-32-px flex flex-middle">
+                            { drop ?
+                                <img onClick={ ()=> { removeConstraint( constraint.constraint_id ) } } className="w-20-px block" src="/assets/icon/cross-error.png"/>
+                                : null
+                            }
+                        </div>
                     </div>
                 </div>
             </div>
-            <div className="rel w-100-pct shadow-blur">
+            {/*<div className="rel w-100-pct shadow-blur">
                 <div className="rel no-overflow bg-white w-100-pct ease" style={{ height: `${ drop ? boxHeight : 0 }px` }}>
                     <div className="scroll-y p-1" style={{ height: boxHeight}}>
                         <div className="flex flex-wrap">
@@ -62,7 +58,7 @@ export default (props) => {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div>*/}
         </div>
     )
 }

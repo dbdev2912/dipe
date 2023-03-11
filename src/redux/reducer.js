@@ -11,6 +11,9 @@ const initState = {
     navbarLinks,
     functions,
 
+    addConstraintBox: false,
+    defaultField: {},
+
     auth: {
         credential_string: localStorage.getItem('credential_string'),
         _token: localStorage.getItem('_token'),
@@ -38,6 +41,13 @@ export default ( state = initState, action ) => {
         case "initializedUserInfo":
             return initializedUserInfo( state, action );
             break;
+
+        case "setAddConstraintBox":
+            return {...state, addConstraintBox: !state.addConstraintBox }
+
+        case "setDefaultField":
+            return setDefaultField( state, action )
+            break;
         default:
             return state;
     }
@@ -62,4 +72,9 @@ const setNavState = ( state, action ) => {
 const initializedUserInfo = ( state, action ) => {
     const { info } = action.payload;
     return { ...state, auth: { ...info, ...state.auth } }
+}
+
+const setDefaultField = ( state, action ) => {
+    const { defaultField } = action.payload;
+    return { ...state, defaultField }
 }
