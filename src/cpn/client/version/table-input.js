@@ -3,7 +3,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { Navbar, Horizon } from '../../navbar';
 
-import { Varchar } from './inputs';
+import {
+    Varchar, Text, Int,
+    DateInput, TimeInput, DateTimeInput,
+    Decimal, Bool,
+} from './inputs';
 
 export default () => {
     const dispatch = useDispatch();
@@ -14,19 +18,26 @@ export default () => {
     const { dateGenerator, autoLabel, openTab } = useSelector( state => state.functions )
     const { navState, unique_string, proxy } = useSelector( state => state );
 
+    const [ table, setTable ] = useState({})
     const [ fields, setFields ] = useState([]);
     const [ data, setData ] = useState({});
 
     useEffect( () => {
         fetch(`${ proxy }/api/${ unique_string }/table/${ table_id }/fields`).then( res => res.json() )
         .then( res => {
-            const { success, content, fields } = res;
+            const { success, content, fields, table, constraints } = res;
             const formatedFields = fields.map( f => {
                 const props = JSON.parse(f.field_props);
                 f.props = props;
-
+                if( constraints ){
+                    /* Lọc ra ràng buộc có cùng mã trường với trường hiện tại, và ràng buộc không phải ràng buộc khóa chính */
+                    f.constraints = constraints.filter( constr => constr.field_id == f.field_id && constr.constraint_type != "pk" );
+                }
                 return f
             })
+            const primaryKey = constraints.filter(constr => constr.constraint_type == "pk")
+            table.primaryKey = primaryKey;
+            setTable(table)            
             setFields( formatedFields )
         })
     }, [])
@@ -37,17 +48,34 @@ export default () => {
         setData( newData )
     }
 
+    const nullCheck = () => {
+        let valid = true;
+        for( let i = 0; i < fields.length; i++ ){
+            const field = fields[i];
+            const { nullable, field_alias } = field;
+            if( !nullable ){
+                if( data[field_alias] == null || data[field_alias] == undefined ){
+                    valid = false
+                }
+            }
+        }
+        return valid;
+    }
+
     const submit = () => {
-        console.log( data )
-        fetch(`${ proxy }/api/${ unique_string }/table/${ table_id }/data/input`, {
-            method: "POST",
-            headers: {
-                "content-type": "application/json"
-            },
-            body: JSON.stringify({ data })
-        }).then( res => res.json() ).then( res => {
-            console.log(res)
-        })
+        if( nullCheck(data) ){
+            fetch(`${ proxy }/api/${ unique_string }/table/${ table_id }/data/input`, {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json"
+                },
+                body: JSON.stringify({ data })
+            }).then( res => res.json() ).then( res => {
+                console.log(res)
+            })
+        }else{
+            alert("Some unnullable fields are missing data!")
+        }
     }
 
     return(
@@ -58,13 +86,40 @@ export default () => {
 
                 <div className="p-1" id="app-scrollBox">
                     {/* VERSION INFO */}
-                    <span className="block text-16-px">Table { table_id }</span>
 
                     <div className="w-50-pct mg-auto p-1 bg-white">
+                        <span className="block text-32-px text-center p-0-5">{ table.table_name }</span>
                         { fields.map( field =>
                             <React.StrictMode key={field.field_id}>
                                 { field.field_data_type == "VARCHAR" ?
                                     <Varchar field={ field } changeTrigger={ changeTrigger }/> : null
+                                }
+                                { field.field_data_type == "TEXT" ?
+                                    <Text field={ field } changeTrigger={ changeTrigger }/> : null
+                                }
+                                { field.field_data_type == "INT" || field.field_data_type == "BIG INT" ?
+                                    <Int field={ field } changeTrigger={ changeTrigger }/> : null
+                                }
+                                { field.field_data_type == "INT UNSIGNED" || field.field_data_type == "BIG INT UNSIGNED" ?
+                                    <Int unsigned={ true } field={ field } changeTrigger={ changeTrigger }/> : null
+                                }
+                                { field.field_data_type == "DATE" ?
+                                    <DateInput field={ field } changeTrigger={ changeTrigger }/> : null
+                                }
+                                { field.field_data_type == "TIME" ?
+                                    <TimeInput field={ field } changeTrigger={ changeTrigger }/> : null
+                                }
+                                { field.field_data_type == "DATETIME" ?
+                                    <DateTimeInput field={ field } changeTrigger={ changeTrigger }/> : null
+                                }
+                                { field.field_data_type == "DECIMAL" ?
+                                    <Decimal field={ field } changeTrigger={ changeTrigger }/> : null
+                                }
+                                { field.field_data_type == "DECIMAL UNSIGNED" ?
+                                    <Decimal unsigned={ true } field={ field } changeTrigger={ changeTrigger }/> : null
+                                }
+                                { field.field_data_type == "BOOL" ?
+                                    <Bool field={ field } changeTrigger={ changeTrigger }/> : null
                                 }
                             </React.StrictMode>
                         )}
@@ -74,6 +129,7 @@ export default () => {
                             </div>
                         </div>
                     </div>
+
 
 
                 </div>

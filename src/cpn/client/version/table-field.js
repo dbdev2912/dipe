@@ -85,6 +85,9 @@ export default ( props ) => {
                     <BOOL defaultValue={ field.props[ prop.name ] } propName={ prop.name } propLabel={ prop.label } changeTrigger={ changeValue }/>}
                 { prop.type == "int" &&
                     <NUMBER defaultValue={ field.props[ prop.name ] } propName={ prop.name } propLabel={ prop.label } changeTrigger={ changeValue }/>}
+                { prop.type == "text" &&
+                    <STRING defaultValue={ field.props[ prop.name ] } propName={ prop.name } propLabel={ prop.label } changeTrigger={ changeValue }/>}
+
             </div>
         )
     }
