@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router()
+const { mysql } = require('../Connect/conect');
 
 const { TableController } = require('../controller/table-controller');
 const { TablesController } = require('../controller/tables-controller');
@@ -42,7 +43,7 @@ router.get('/:table_id/fields', (req, res) => {
                 if (success) {
                     const data = fields.map(field => field.get())
                     table.getConstraints(({ success, constraints }) => {
-                        res.status(200).send( { success: true, content: "Thành công", fields: data, constraints } )
+                        res.status(200).send( { success: true, content: "Thành công", table: table.get(), fields: data, constraints } )
                     })
                 } else {
                     res.status(404).send( { success: false, content: "Thất bại" })
@@ -76,6 +77,28 @@ router.get('/:table_id/field/:field_id', (req, res) => {
         }
     })
 })
+
+router.get('/foreign/data/:field_id', ( req, res ) => {
+    const { field_id } = req.params;
+
+    const query = `
+        SELECT * FROM tables WHERE
+            TABLE_ID IN (
+                SELECT table_id FROM fields WHERE field_id = 14
+            )
+    `;
+    mysql( query, (result) => {
+        if( result.length > 0 ){
+            const table = new TableController(result[0]);
+            table.findAll( ({ success, data }) => {
+                res.status(200).send({ success, data })
+            })
+        }else{
+            res.send({ success: false })
+        }
+    })
+})
+
 // tạo mới trường + ràng buộc
 router.post('/create/field_constraint', (req, res) => {
 
@@ -447,7 +470,7 @@ router.post('/:table_id/data/input', ( req, res ) => {
     }]
 
     const Tables = new TablesController();
-    
+
     Tables.getone(criteria, ({ success, table }) => {
         if (success) {
             table.insert( data, ({ success, content }) => {
