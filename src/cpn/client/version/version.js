@@ -91,6 +91,11 @@ export default () => {
         })
     }
 
+    const scrollTo = (e) =>{
+        console.log( e.target )
+        $(e.target).find('a')[0].click()
+    }
+
     const changeTable = (table) => {
         setTable(table)
         _setTable( table )
@@ -262,7 +267,7 @@ export default () => {
             <div id="app-container" className={`app fixed-default overflow ${ !navState ? "app-stretch": "app-scaled" }`} style={{ height: "100vh" }}>
                 <Horizon />
 
-                <div className="p-1">
+                <div className="p-1" id="app-scrollBox">
                     {/* VERSION INFO */}
                     <div className="min-height-full-screen">
                         <div className="flex flex-wrap m-t-1">
@@ -275,17 +280,18 @@ export default () => {
                         </div>
 
                         <div className="flex flex-wrap flex-center">
-                            <div className="project-card bg-white shadow-blur m-1 p-1" style={{ minHeight: cardMinHeight }}>
+                            <div onClick={ scrollTo } className="project-card bg-white shadow-blur shadow-hover pointer m-1 p-1" style={{ minHeight: cardMinHeight }}>
                                 <span className="block text-center p-1 text-20-px">Cơ sở dữ liệu</span>
                                 <hr className="border-1-t"/>
+                                <a className="hidden" href="#database"></a>
                             </div>
 
-                            <div className="project-card bg-white shadow-blur m-1 p-1" style={{ minHeight: cardMinHeight }}>
+                            <div className="project-card bg-white shadow-blur shadow-hover pointer m-1 p-1" style={{ minHeight: cardMinHeight }}>
                                 <span className="block text-center p-1 text-20-px">API</span>
                                 <hr className="border-1-t"/>
                             </div>
 
-                            <div className="project-card bg-white shadow-blur m-1 p-1" style={{ minHeight: cardMinHeight }}>
+                            <div className="project-card bg-white shadow-blur shadow-hover pointer m-1 p-1" style={{ minHeight: cardMinHeight }}>
                                 <span className="block text-center p-1 text-20-px">UI</span>
                                 <hr className="border-1-t"/>
                             </div>
@@ -298,7 +304,7 @@ export default () => {
                     </div>
 
                     { /* DATABASE DESIGN */ }
-                    <div className="w-100-pct mg-auto" style={{ height: "90vh" }}>
+                    <div className="w-100-pct mg-auto" style={{ height: "90vh" }} id="database">
                         <div className="flex flex-no-wrap h-fit ">
                             <div className="w-35-pct column h-fit p-1">
                                 {/* SEARCH AND ADD */}
@@ -346,11 +352,15 @@ export default () => {
                                                     <span className="block text-20-px">{ table.table_name }</span>
                                                 }
                                             </div>
-                                            <div className="w-32-px">
+                                            <div className="w-32-px rel m-r-1">
+                                                <div className="abs b-0 r-0" onClick={ () => { openTab( `/su/project/${project_id}/version/${ version_id }/table/${ table.table_id }/input` ) } }>
+                                                    <img src="/assets/icon/import.png" className="w-18-px pointer"/>
+                                                </div>
+                                            </div>
+                                            <div className="w-32-px rel">
                                                 <div className="abs b-0 r-0" onClick={ tableStateSwitch }>
                                                     <img src="/assets/icon/edit.png" className="w-24-px pointer"/>
                                                 </div>
-
                                             </div>
                                         </div>
 
