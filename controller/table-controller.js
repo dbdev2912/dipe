@@ -1,4 +1,4 @@
-const { mysql } = require('../Connect/conect');
+const { mysql, mongo } = require('../Connect/conect');
 const { FieldController } = require("./field-controller");
 const { ConstraintController } = require("./constraint-controller");
 
@@ -148,6 +148,120 @@ class TableController {
             `;
             mysql( query, (result) => {
                 callback({ success: true })
+            })
+        }
+
+        /* INSERT DATA TO MONGODB */
+
+        connect = ( callback ) => {
+            mongo( dbo => {
+                console.log(dbo)
+                const col = dbo.collection( this.table_alias );
+                callback({ success: true, col });
+            })
+        }
+
+        find = (criteria, callback) => {
+            this.connect( ({ success, col }) => {
+                if( !success ){
+                    callback( { success, content: `Failed to connect to collection: ${ this.table_name }` } )
+                }else{
+                    const collection = new Collection( col );
+                    collection.find( criteria, ({ success, content, data }) => {
+                        callback( {success, content, data} )
+                    })
+                }
+            })
+        }
+
+        findAll = (callback) => {
+            this.connect( ({ success, col }) => {
+                if( !success ){
+                    callback( { success, content: `Failed to connect to collection: ${ this.table_name }` } )
+                }else{
+                    const collection = new Collection( col );
+                    collection.findAll( ({ success, content, data })=> {
+                        callback( {success, content, data} )
+                    })
+                }
+            })
+        }
+
+        insert = ( data, callback ) => {
+            this.getConstraints( ({ success, constraints }) => {
+                this.connect( ({ success, col }) => {
+
+
+                    if( !success ){
+                        callback( { success, content: `Failed to connect to collection: ${ this.table_name }` } )
+                    }else{
+                        const collection = new Collection( col );
+                        collection.insert( data, constraints, ({ success, content })=> {
+                            if( success ){
+                                collection.insertPureData( data, ({ success, content }) => {
+                                    callback( {success, content} )
+                                })
+                            }else{
+                                callback( {success, content} )
+                            }
+                        } )
+                    }
+                })
+            })
+        }
+
+        update = (oldValue, newValue, callback) => {
+            this.getConstraints( ({ success, constraints }) => {
+                this.connect( ({ success, col }) => {
+                    if( !success ){
+                        callback( { success, content: `Failed to connect to collection: ${ this.table_name }` } )
+                    }else{
+                        const collection = new Collection( col );
+                        collection.updateChangeCheck( constraints, oldValue, newValue, ({ changes })=> {
+                            if( changes.length > 0 ){
+                                const context = {  }
+                                collection.synchronizePrimaryData( constraints, changes, oldValue, newValue, ({ success, content }) => {
+                                    context["pk"] = { success, content }
+                                    collection.synchronizeForeignData( constraints, changes, oldValue, newValue, ({ success, content }) => {
+                                        context["fk"] = { success, content }
+                                        callback({ success: true, content: context })
+                                    })
+                                    // callback({ success: true, content: "Updated after synchronizing data" })
+                                })
+                            }else{
+                                collection.update( oldValue, newValue, ({ content }) => {
+                                    callback({ success: true, content })
+                                })
+                            }
+                        })
+                    }
+                })
+            })
+        }
+
+        delete = (criteria, callback) => {
+            this.connect( ({ success, col }) => {
+                if( !success ){
+                    callback( { success, content: `Failed to connect to collection: ${ this.table_name }` } )
+                }else{
+                    const collection = new Collection( col );
+                    collection.delete( criteria, ({ success, content, data })=> {
+                        callback( {success, content, data} )
+                    })
+                }
+            })
+        }
+
+        deleteAll = (callback) => {
+            this.connect( ({ success, col }) => {
+                if( !success ){
+                    callback( { success, content: `Failed to connect to collection: ${ this.table_name }` } )
+                }else{
+                    const collection = new Collection( col );
+                    collection.deleteAll( ({ success, content, data })=> {
+                        callback( {success, content, data} )
+                    })
+                }
             })
         }
 

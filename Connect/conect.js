@@ -16,7 +16,7 @@ var conn=mysql.createConnection({
   });
 
 const { MongoClient } = require('mongodb');
-const connectionString = " mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+1.6.2";
+const connectionString = "mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+1.6.1";
 const dbName="dipe";
 
 module.exports = {

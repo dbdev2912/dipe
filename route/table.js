@@ -434,4 +434,29 @@ router.put('/modify/field', (req, res) => {
 //     })
 // })
 
+
+router.post('/:table_id/data/input', ( req, res ) => {
+
+    const { table_id } = req.params;
+    const { data } = req.body;
+
+    const criteria = [{
+           field: "table_id",
+           value: table_id,
+           fomula: "="
+    }]
+
+    const Tables = new TablesController();
+
+    Tables.getone(criteria, ({ success, table }) => {
+        if (success) {
+            table.insert( data, ({ success, content }) => {
+                
+                res.status(200).send({ success, content })
+            })
+        } else {
+            res.status(404).send( { success: false, content: `Không tìm thấy bảng có ID: ${table_id} ` })
+        }
+    })
+})
 module.exports = { router }
