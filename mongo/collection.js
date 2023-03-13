@@ -1,6 +1,4 @@
-const { mongo, mysql } = require('../db/connector');
-const { TablesController } = require('../controllers/tables-controller');
-const { TableController } = require('../controllers/table-controller');
+const { mongo, mysql } = require('../Connect/conect');
 
 class Collection {
     constructor( col ) {

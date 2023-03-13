@@ -1,8 +1,9 @@
 const { mysql, mongo } = require('../Connect/conect');
 const { FieldController } = require("./field-controller");
 const { ConstraintController } = require("./constraint-controller");
-
+const { Collection } = require('../mongo/collection');
 const { id } = require('../module/modulars');
+
 
 class TableController {
         constructor ( table_object ){
@@ -191,20 +192,25 @@ class TableController {
             this.getConstraints( ({ success, constraints }) => {
                 this.connect( ({ success, col }) => {
 
-
                     if( !success ){
                         callback( { success, content: `Failed to connect to collection: ${ this.table_name }` } )
                     }else{
                         const collection = new Collection( col );
-                        collection.insert( data, constraints, ({ success, content })=> {
-                            if( success ){
-                                collection.insertPureData( data, ({ success, content }) => {
+                        if( constraints ){
+                            collection.insert( data, constraints, ({ success, content })=> {
+                                if( success ){
+                                    collection.insertPureData( data, ({ success, content }) => {
+                                        callback( {success, content} )
+                                    })
+                                }else{
                                     callback( {success, content} )
-                                })
-                            }else{
+                                }
+                            } )
+                        }else{
+                            collection.insertPureData( data, ({ success, content }) => {
                                 callback( {success, content} )
-                            }
-                        } )
+                            })
+                        }
                     }
                 })
             })

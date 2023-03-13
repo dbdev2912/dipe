@@ -1,7 +1,8 @@
-const {mysql} = require('../Connect/conect');
+const { mysql } = require('../Connect/conect');
 
 const { TableController } = require("./table-controller");
 const { id } = require('../module/modulars');
+
 
 class TablesController {
 

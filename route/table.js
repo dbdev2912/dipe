@@ -447,11 +447,11 @@ router.post('/:table_id/data/input', ( req, res ) => {
     }]
 
     const Tables = new TablesController();
-
+    
     Tables.getone(criteria, ({ success, table }) => {
         if (success) {
             table.insert( data, ({ success, content }) => {
-                
+
                 res.status(200).send({ success, content })
             })
         } else {
