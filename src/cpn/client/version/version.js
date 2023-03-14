@@ -6,6 +6,8 @@ import Field  from './table-field';
 import $ from 'jquery';
 
 import AddConstraint from './add-constraint';
+import AddApi from './add-api';
+import ApiDesign from './api';
 
 const cardMinHeight = 400;
 
@@ -16,7 +18,7 @@ export default () => {
 
     const { urls, bottomUrls } = useSelector( state => state.navbarLinks.su )
     const { dateGenerator, autoLabel, openTab } = useSelector( state => state.functions )
-    const { navState, unique_string, proxy, addConstraintBox } = useSelector( state => state );
+    const { navState, unique_string, proxy, addConstraintBox, addApi } = useSelector( state => state );
 
     const [ project, setProject ] = useState({})
     const [ version, setVersion ] = useState({})
@@ -92,7 +94,6 @@ export default () => {
     }
 
     const scrollTo = (e) =>{
-        console.log( e.target )
         $(e.target).find('a')[0].click()
     }
 
@@ -286,9 +287,10 @@ export default () => {
                                 <a className="hidden" href="#database"></a>
                             </div>
 
-                            <div className="project-card bg-white shadow-blur shadow-hover pointer m-1 p-1" style={{ minHeight: cardMinHeight }}>
+                            <div onClick={ scrollTo } className="project-card bg-white shadow-blur shadow-hover pointer m-1 p-1" style={{ minHeight: cardMinHeight }}>
                                 <span className="block text-center p-1 text-20-px">API</span>
                                 <hr className="border-1-t"/>
+                                <a className="hidden" href="#api"></a>
                             </div>
 
                             <div className="project-card bg-white shadow-blur shadow-hover pointer m-1 p-1" style={{ minHeight: cardMinHeight }}>
@@ -304,7 +306,7 @@ export default () => {
                     </div>
 
                     { /* DATABASE DESIGN */ }
-                    <div className="w-100-pct mg-auto" style={{ height: "90vh" }} id="database">
+                    <div className="w-100-pct mg-auto p-t-5" style={{ height: "90vh" }} id="database">
                         <div className="flex flex-no-wrap h-fit ">
                             <div className="w-35-pct column h-fit p-1">
                                 {/* SEARCH AND ADD */}
@@ -427,6 +429,10 @@ export default () => {
                         </div>
                     </div>
 
+                    {/* API DESIGN */}
+
+                    <ApiDesign version={ version }/>
+
 
 
                 </div>
@@ -436,6 +442,11 @@ export default () => {
                 <AddConstraint tables={ tables } currentTable={ table } updateFields={updateFields}/>
                 : null
              }
+
+             { addApi ?
+                 <AddApi />
+                 : null
+              }
         </div>
     )
 }
