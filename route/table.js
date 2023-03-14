@@ -84,14 +84,14 @@ router.get('/foreign/data/:field_id', ( req, res ) => {
     const query = `
         SELECT * FROM tables WHERE
             TABLE_ID IN (
-                SELECT table_id FROM fields WHERE field_id = 14
+                SELECT table_id FROM fields WHERE field_id = ${ field_id }
             )
     `;
     mysql( query, (result) => {
         if( result.length > 0 ){
             const table = new TableController(result[0]);
             table.findAll( ({ success, data }) => {
-                res.status(200).send({ success, data })
+                res.status(200).send({ success, data, table: table.get() })
             })
         }else{
             res.send({ success: false })

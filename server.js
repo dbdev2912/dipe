@@ -28,6 +28,7 @@ var projects = require('./route/projects');
 var tk = require('./route/token');
 var tables = require('./route/tables');
 var table = require('./route/table');
+var api = require('./route/apis');
 
 app.get('/api/get/the/god/damn/api/key/with/ridiculous/long/url/string', (req, res) => {
   res.send({ unique_string })
@@ -47,6 +48,7 @@ app.use(`/${unique_string}`, login);
 //User
 app.use(`/api/${unique_string}/user`, user);
 app.use(`/api/${unique_string}/projects`, projects);
+app.use(`/api/${unique_string}/apis`, api);
 //Table
 // app.use('/api/table',table);
 //Field
