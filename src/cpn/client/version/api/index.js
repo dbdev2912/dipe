@@ -30,8 +30,28 @@ export default (props) => {
                 setCollection( collections[0] )
             }
             setCollections( collections );
+            dispatch({
+                type: "addApiToCollectionFunc",
+                payload: { addApiToCollection, collections }
+            })
+            console.log(collections)
         })
     }, [version])
+
+    useEffect(() => {
+        dispatch({
+            type: "setCurrentCollection",
+            payload: { collection, collections }
+        })
+    }, [collection])
+
+    useEffect(() => {
+        dispatch({
+            type: "setCurrentCollection",
+            payload: { collection, collections }
+        })
+    }, [collections])
+
 
     const createApiCollection = () => {
 
@@ -64,7 +84,23 @@ export default (props) => {
     }
 
     const nameSwitch = () => {
-        setNameState( !nameState )
+        fetch(`${proxy}/api/${ unique_string }/apis/collection/${ collection.collection_id }/name`, {
+            method: "PUT",
+            headers: {
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({ collection_name: collection.collection_name })
+        }).then( res => res.json() ).then( res => {
+            setNameState( !nameState )
+            const newCollections = collections.map( col => {
+                if( collection.collection_id === col.collection_id ){
+                    return collection
+                }else{
+                    return col
+                }
+            })
+            setCollections( newCollections )
+        })
     }
     const createAPI = () => {
         dispatch({
@@ -81,6 +117,21 @@ export default (props) => {
         }).then( res => res.json()).then( res =>{
             setCollections( newCollections );
         })
+    }
+
+    const addApiToCollection = ( collections, _collection, api ) => {
+        const newCollection = _collection;
+
+        newCollection[ api.type.value ].push( api )
+        setCollection( newCollection );
+        const newCollections = collections.map( col => {
+            if( col.collection_id === newCollection.collection_id ){
+                return newCollection;
+            }else{
+                return col
+            }
+        })
+        setCollections( newCollections )
     }
 
     return (
@@ -150,7 +201,7 @@ export default (props) => {
                                     <button onClick={ createAPI } className="bold text-24-px no-border bg-green white border-radius-50-pct pointer" style={{ width: "32px", height: "32px" }}>+</button>
                                 </div>
                                 <div className="w-100-px flex flex-middle">
-                                    <button onClick={ () => { setHeight(200) } } className="no-border w-100-pct text-center pointer block p-0-5 text-16-px">{ filter.label }</button>
+                                    <button onClick={ () => { setHeight(height != 0 ? 0 : 200 ) } } className="no-border w-100-pct text-center pointer block p-0-5 text-16-px">{ filter.label }</button>
                                 </div>
                             </div>
                         </div>
@@ -170,14 +221,18 @@ export default (props) => {
 
                         <hr className="block border-1-top"/>
                         { filter.value ?
-                            <div>
-                                <span className="block text-20-px">{ filter.label }</span>
+                            <div className="block">
+                                { collection[filter.value] ? collection[filter.value].map( api =>
+                                    <span className="block p-1 m-t-1 shadow-blur shadow-hover text-16-px">{ api.name }</span>
+                                ): null }
                             </div>
                         :
                             <div>
                                 <span className="block text-20-px">{ "ALL" }</span>
                             </div>
                         }
+
+
                         </div>
                     : null }
                     </div>

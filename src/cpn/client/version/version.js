@@ -431,7 +431,7 @@ export default () => {
 
                     {/* API DESIGN */}
 
-                    <ApiDesign version={ version }/>
+                    <ApiDesign version={ version } />
 
 
 
@@ -444,7 +444,7 @@ export default () => {
              }
 
              { addApi ?
-                 <AddApi />
+                 <AddApi version={ version } project_id={ project_id } tables={ tables }/>
                  : null
               }
         </div>

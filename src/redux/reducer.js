@@ -14,7 +14,7 @@ const initState = {
     addConstraintBox: false,
     addApi: false,
     defaultField: {},
-
+    collection: {},
     auth: {
         credential_string: localStorage.getItem('credential_string'),
         _token: localStorage.getItem('_token'),
@@ -51,6 +51,12 @@ export default ( state = initState, action ) => {
 
         case "setDefaultField":
             return setDefaultField( state, action )
+            break;
+        case "setCurrentCollection":
+            return {...state, collection: action.payload.collection, collections: action.payload.collections }
+            break;
+        case "addApiToCollectionFunc":
+            return { ...state, functions: { ...state.functions, addApiToCollection: action.payload.addApiToCollection, collections: action.payload.collections } }
             break;
         default:
             return state;
