@@ -3,8 +3,11 @@ var app = express();
 const cors = require("cors");
 var bodyparser = require('body-parser');
 const { unique_string } = require('./unique_string');
+const { apiResolving } = require('./route/api-resolving');
+
 const morgan = require('morgan');
 require('dotenv').config();
+const { mongo } = require('./Connect/conect');
 
 app.use(bodyparser.urlencoded({
     limit: "50mb",
@@ -59,7 +62,21 @@ app.use(`/api/${unique_string}/tables`, tables.router)
 app.use(`/api/${unique_string}/table`, table.router)
 
 app.use((req, res, next) => {
-  res.status(404).send("404 - Page not found");
+    const { url } = req;
+    mongo( dbo => {
+        dbo.collection('apis').findOne({ "url.url": url }, (err, result) => {
+            const api = result;
+            if( api ){
+
+                apiResolving(api, ( data )=> {
+
+                    res.send({ api: data })
+                })
+            }else{
+                res.send("404 page not found")
+            }
+        })
+    })
 })
 
 var server = app.listen(process.env.PORT, function () {

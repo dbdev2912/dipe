@@ -45,4 +45,37 @@ router.delete('/collection/:collection_id', (req, res) => {
 })
 
 
+router.put('/collection/:col_id/name', ( req, res ) => {
+    const { col_id } = req.params;
+    const collection_id = parseInt( col_id );
+    const { collection_name } = req.body;
+    mongo( dbo => {
+        dbo.collection('api_collection').updateOne({ collection_id }, { $set: { collection_name } }, (err, result) => {
+            res.send({ success: true })
+        })
+    })
+})
+
+router.post('/api', (req, res) => {
+    const { data } = req.body;
+    const { tables, fields, name, collection, fullurl, type } = data;
+    delete data["collection"]
+    const { collection_id } = collection;
+    const newCollection = collection;
+    newCollection[ type.value ].push(data);
+
+    mongo( dbo => {
+        dbo.collection("api_collection").updateOne({ collection_id: parseInt(collection_id) }, { $set: {
+             get: newCollection.get,
+             post: newCollection.post,
+             put: newCollection.put,
+             delete: newCollection.delete,
+         } }, (err, result) => {
+             dbo.collection("apis").insertOne( data, (err, result) => {
+                 res.send({ success: true })
+             })
+        })
+    })
+})
+
 module.exports = router;
