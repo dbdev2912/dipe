@@ -58,18 +58,14 @@ export default ( props ) => {
     }
 
     const submitApi = () => {
-        const _tables = selectedTables.map(tb => {
-            delete tb["fields"];
-            return tb;
-        })
         const submitBody = {
             ...api,
-            tables: _tables,
+            tables: selectedTables,
             fields: selectedFields,
             collection,
+            status: false,
             fullurl: api.url.proxy + api.url.url,
         }
-
         fetch(`${proxy}/api/${ unique_string }/apis/api`, {
             method: "POST",
             headers: {
@@ -78,7 +74,7 @@ export default ( props ) => {
             body: JSON.stringify({ data: submitBody })
         }).then( res => res.json() ).then( res => {
             closeDialog()
-            addApiToCollection( collections, collection, api )
+            addApiToCollection( collections, collection, submitBody )
         })
     }
 
@@ -167,7 +163,7 @@ export default ( props ) => {
             })
 
             const dependencedTables = filtedTables.map( table => {
-
+                const resultTables = []
                 for( let i = 0; i < selectedTables.length; i++ ){
                     const { constraint } = selectedTables[i];
 
@@ -177,13 +173,14 @@ export default ( props ) => {
 
                             const constr = constraint[j];
                             const { constraint_type, field_id } = constr
-                            if( constraint_type ==="pk" ){
-                                return dependencedTablesFilter( field_id );
+                            if( constraint_type === "pk" ){
+                                const dptb = dependencedTablesFilter( field_id );
+                                resultTables.push(...dptb)
                             }
                         }
                     }
                 }
-                return null
+                return resultTables
             })
 
             const finalTables_1 = showTables.filter( tb => tb != null );

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
+import ApiCard from './api-card';
+
 export default (props) => {
 
     const { version } = props;
@@ -34,7 +36,6 @@ export default (props) => {
                 type: "addApiToCollectionFunc",
                 payload: { addApiToCollection, collections }
             })
-            console.log(collections)
         })
     }, [version])
 
@@ -164,8 +165,6 @@ export default (props) => {
                         </div>
                     ) }
                     </div>
-
-
                 </div>
 
                 <div className="w-65-pct p-1">
@@ -223,7 +222,7 @@ export default (props) => {
                         { filter.value ?
                             <div className="block">
                                 { collection[filter.value] ? collection[filter.value].map( api =>
-                                    <span className="block p-1 m-t-1 shadow-blur shadow-hover text-16-px">{ api.name }</span>
+                                    <ApiCard  _api={ api } collection={ collection }/>
                                 ): null }
                             </div>
                         :
