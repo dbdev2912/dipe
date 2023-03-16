@@ -64,6 +64,7 @@ router.post('/api', (req, res) => {
     const newCollection = collection;
     newCollection[ type.value ].push(data);
 
+
     mongo( dbo => {
         dbo.collection("api_collection").updateOne({ collection_id: parseInt(collection_id) }, { $set: {
              get: newCollection.get,
@@ -74,6 +75,15 @@ router.post('/api', (req, res) => {
              dbo.collection("apis").insertOne( data, (err, result) => {
                  res.send({ success: true })
              })
+        })
+    })
+})
+
+router.put('/api/status', ( req, res ) => {
+    const { url, status } = req.body;
+    mongo( dbo => {        
+        dbo.collection('apis').updateOne({ "url.url": url }, { $set: { status } },(err, result) => {
+            res.send({ success: true })
         })
     })
 })

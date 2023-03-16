@@ -67,10 +67,9 @@ app.use((req, res, next) => {
         dbo.collection('apis').findOne({ "url.url": url }, (err, result) => {
             const api = result;
             if( api ){
+                apiResolving(api, ( { data } )=> {
 
-                apiResolving(api, ( data )=> {
-
-                    res.send({ api: data })
+                    res.send({ data })
                 })
             }else{
                 res.send("404 page not found")
