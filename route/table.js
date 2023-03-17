@@ -376,8 +376,6 @@ router.put('/modify/field', (req, res) => {
         default_value
     } = req.body;
 
-    console.log(req.body)
-
     const Tables = new TablesController();
     const criteria = [{
         field: "table_id",
