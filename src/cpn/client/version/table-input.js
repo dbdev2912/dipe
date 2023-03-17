@@ -37,7 +37,7 @@ export default () => {
             })
             const primaryKey = constraints.filter(constr => constr.constraint_type == "pk")
             table.primaryKey = primaryKey;
-            setTable(table)            
+            setTable(table)
             setFields( formatedFields )
         })
     }, [])
@@ -70,8 +70,9 @@ export default () => {
                     "content-type": "application/json"
                 },
                 body: JSON.stringify({ data })
-            }).then( res => res.json() ).then( res => {
-                console.log(res)
+            }).then( res => res.json() ).then( res => {                
+                const { success, content } = res;
+                alert( content )
             })
         }else{
             alert("Some unnullable fields are missing data!")
