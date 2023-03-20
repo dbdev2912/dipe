@@ -96,6 +96,7 @@ const findForeignTables = ( tables, pk ) => {
 }
 
 const dataFilterByConstraints = ( result, tables, constraints, index, callback) => {
+
     if( index === constraints.length ){
         callback({ data: result })
     }else{
@@ -105,7 +106,7 @@ const dataFilterByConstraints = ( result, tables, constraints, index, callback) 
             const field_alias = getFieldAlias( tables, field_id )
             const ref_alias = getFieldAlias( tables, reference_on )
             if( ref_alias != undefined ){
-                const newResult = result.filter( res => res[ field_alias ] === res [ ref_alias ] );
+                const newResult = result.filter( res => res[ field_alias ] === res[ ref_alias ] );
                 dataFilterByConstraints( newResult, tables, constraints, index + 1, callback )
             }else{
                 dataFilterByConstraints( result, tables, constraints, index + 1, callback )
@@ -117,21 +118,42 @@ const dataFilterByConstraints = ( result, tables, constraints, index, callback) 
     }
 }
 
-const removeDuplicates = (data) => {
-    const processedKeys = {};
+// const removeDuplicates = (data) => {
+//     const processedKeys = {};
+//
+//     const uniqueData = data.filter((item) => {
+//         const key = item._id;
+//         if (!processedKeys.hasOwnProperty(key)) {
+//             processedKeys[key] = true;
+//             return true;
+//         }
+//         return false;
+//     });
+//     return uniqueData;
+// }
 
-    const uniqueData = data.filter((item) => {
-        const key = item._id;
-        if (!processedKeys.hasOwnProperty(key)) {
-            processedKeys[key] = true;
-            return true;
-        }
-        return false;
+const removeDuplicate = ( data ) => {
+    const uniqueArray = data.filter((value, index) => {
+        const _value = JSON.stringify(value);
+        return index === data.findIndex(obj => {
+            return JSON.stringify(obj) === _value;
+        });
     });
-    return uniqueData;
+    return uniqueArray
 }
 
-const getRequest = ( tables, fields, callback ) => {
+const paramsFilting = ( data, paramFilters, index ) => {
+
+    if( index === paramFilters.length ){
+        return data
+    }else{
+        const { field_alias, value } = paramFilters[index]
+        const newData = data.filter( d => d[field_alias] == value )
+        return paramsFilting( newData, paramFilters, index + 1 )
+    }
+}
+
+const getRequest = (req, tables, fields, url, customFields, callback ) => {
     mongo( dbo => {
         getDataFromMongo(dbo, tables, 0, {}, ( { data } ) => {
             const rawConstraints = tables.map( table => {
@@ -153,10 +175,10 @@ const getRequest = ( tables, fields, callback ) => {
             }
             // callback( constraints )
             mergeData( tables, data, 0, undefined, ({ result }) => {
+
                 dataFilterByConstraints( result, tables, constraints, 0, ({ data }) => {
 
-                    const uniqueData = removeDuplicates(data);
-
+                    const uniqueData = removeDuplicate(data);
                     if( fields != undefined && fields.length > 0 ){
                         const finalData = uniqueData.map( data => {
                             const newData = {};
@@ -166,7 +188,70 @@ const getRequest = ( tables, fields, callback ) => {
                             }
                             return newData
                         })
-                        callback({ data: finalData })
+                        const { params } = url;
+                        const paramsURL = url.url;
+
+                        const splittedURL = req.url.split('/')
+                        const splittedParams = paramsURL.split('/')
+
+                        if( params != undefined && params.length > 0 ){
+                            const paramFilters = params.map( field => {
+                                const { field_alias } = field
+                                return {
+                                    field_alias,
+                                    value: splittedURL[ splittedParams.indexOf( `:${ field_alias }` ) ]
+                                }
+                            })
+                            finalFinalData = paramsFilting( finalData, paramFilters, 0 )
+
+                            if( customFields != undefined && customFields.length > 0 ){
+                                const fieldWithCustomName = fields.filter( f => f.custom_alias != undefined && f.custom_alias.length > 0 )
+                                fieldWithCustomName.sort((a, b) => a.custom_alias.length > b.custom_alias.length);
+
+                                customFields.map( cf => {
+                                    const {
+                                        name, field_alias, fomular, field_name,
+                                    } = cf;
+                                    for( let i = 0; i  < finalFinalData.length ; i++ ){
+                                        const newData = finalData[i]
+                                        newData[field_alias] = fomular
+                                        fieldWithCustomName.map( f => {
+                                            newData[field_alias] = newData[field_alias].replaceAll( f.custom_alias, newData[f.field_alias] )
+                                        })
+                                        newData[field_alias] = eval(newData[field_alias]);
+                                    }
+                                })
+                                callback({ data: finalFinalData })
+                            }else{
+                                callback({ data: finalFinalData })
+                            }
+                        }else{
+                            const finalFinalData = finalData;
+
+                            if( customFields != undefined && customFields.length > 0 ){
+                                const fieldWithCustomName = fields.filter( f => f.custom_alias != undefined && f.custom_alias.length > 0 )
+                                fieldWithCustomName.sort((a, b) => a.custom_alias.length > b.custom_alias.length);
+
+                                customFields.map( cf => {
+                                    const {
+                                        name, field_alias, fomular, field_name,
+                                    } = cf;
+                                    for( let i = 0; i  < finalFinalData.length ; i++ ){
+                                        const newData = finalData[i]
+                                        newData[field_alias] = fomular
+                                        fieldWithCustomName.map( f => {
+                                            newData[field_alias] = newData[field_alias].replaceAll( f.custom_alias, newData[f.field_alias] )
+                                        })
+                                        newData[field_alias] = eval(newData[field_alias]);
+                                        finalData[i] = newData
+                                    }
+                                })
+                                callback({ data: finalFinalData })
+                            }else{
+                                callback({ data: finalFinalData })
+                            }
+                        }
+
                     }else{
                         callback({ data: uniqueData })
                     }
@@ -177,11 +262,11 @@ const getRequest = ( tables, fields, callback ) => {
 }
 
 
-const apiResolving = (api, callback) => {
-    const { tables, fields, type } = api;
+const apiResolving = (req, api, callback) => {
+    const { tables, fields, type, url, customFields } = api;
     switch (type.value) {
         case "get":
-            getRequest( tables, fields, callback );
+            getRequest(req, tables, fields, url, customFields, callback );
             break
 
         default:

@@ -80,10 +80,37 @@ router.post('/api', (req, res) => {
 })
 
 router.put('/api/status', ( req, res ) => {
-    const { url, status } = req.body;
-    mongo( dbo => {        
-        dbo.collection('apis').updateOne({ "url.url": url }, { $set: { status } },(err, result) => {
-            res.send({ success: true })
+    const { url, status, collection } = req.body;
+
+    mongo( dbo => {
+        dbo.collection('apis').updateOne({ "url.id_str": url }, { $set: { status } },(err, result) => {
+            const { collection_id } = collection;
+            dbo.collection("api_collection").updateOne({ collection_id }, { $set: {
+                 get: collection.get,
+                 post: collection.post,
+                 put: collection.put,
+                 delete: collection.delete,
+             } }, (err, result) => {
+                 res.send({ success: true })
+            })
+        })
+    })
+})
+
+router.delete('/api', ( req, res ) => {
+    const { api, collection } = req.body;
+
+    mongo( dbo => {
+        dbo.collection('apis').deleteOne({ "url.id_str": api.url.id_str }, (err, result) => {
+            const { collection_id } = collection;
+            dbo.collection("api_collection").updateOne({ collection_id }, { $set: {
+                 get: collection.get,
+                 post: collection.post,
+                 put: collection.put,
+                 delete: collection.delete,
+             } }, (err, result) => {
+                 res.send({ success: true })
+            })
         })
     })
 })
