@@ -54,6 +54,10 @@ function titleCase(str) {
     }).join(' ');
 }
 
+const auto_id = () => {
+    return 'id' + (new Date()).getTime();
+}
+
 export default {
-    dateGenerator, openTab, titleCase, autoLabel
+    dateGenerator, openTab, titleCase, autoLabel, auto_id
 }

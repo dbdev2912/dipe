@@ -7,16 +7,17 @@ export default ( props ) => {
     const { version, project_id, tables } = props;
     const dispatch = useDispatch()
     const { proxy, unique_string, collection, collections } = useSelector(state => state);
-    const { addApiToCollection } = useSelector( state => state.functions );
+    const { addApiToCollection, auto_id } = useSelector( state => state.functions );
     const [ height, setHeight ] = useState(0);
     const [ tablesHeight, setTablesHeight ] = useState(0);
 
     const [ filter, setFilter ] = useState([])
     const [ filtedTables, setFiltedTables ] = useState([]);
     const [ selectedTables, setSelectedTables ] = useState([])
-
+    const [ params, setParams ] = useState([])
     const [ filtedFields, setFiltedFields ] = useState([]);
     const [ selectedFields, setSelectedFields ] = useState([]);
+    const [ customFields, setCustomFields ] = useState([]);
 
     const criterias = [
         { id: 1, label: "GET", value: "get" },
@@ -35,13 +36,13 @@ export default ( props ) => {
 
 
     const createUniqueURL = (baseURL) => {
-        const uniqueID = uuidv4();
-        return { url: `/api/${ project_id }/${uniqueID}`.replaceAll("-", '/'), proxy };
+        const uniqueID = uuidv4().replaceAll("-", '');
+        return { url: `/api/${ project_id }/${version.version_id}/${uniqueID}`, proxy, id_str: uniqueID };
     }
 
     useEffect( () => {
         setApi({ ...api, url: createUniqueURL() })
-    }, [])
+    }, [ version ])
 
     useEffect(() => {
         setFiltedTables(tables)
@@ -58,14 +59,19 @@ export default ( props ) => {
     }
 
     const submitApi = () => {
+        const url = { ...api.url, url: api.url.url + generateParams().url, params }
         const submitBody = {
             ...api,
             tables: selectedTables,
             fields: selectedFields,
             collection,
+            url,
             status: false,
-            fullurl: api.url.proxy + api.url.url,
+            fullurl: api.url.proxy + url.url,
+            customFields
         }
+
+        console.log(submitBody)
         fetch(`${proxy}/api/${ unique_string }/apis/api`, {
             method: "POST",
             headers: {
@@ -199,14 +205,14 @@ export default ( props ) => {
             }
 
             return [ ...finalTables_1, ...finalTables_4 ].map( table =>
-                <div className="p-1 border-1 m-1 pointer shadow-blur shadow-hover" onClick={ () => { filterAdd(table) } }>
+                <div key={ table.table_id } className="p-1 border-1 m-1 pointer shadow-blur shadow-hover" onClick={ () => { filterAdd(table) } }>
                     <span className="p-0-5">{ table.table_name }</span>
                 </div>
             )
         }else{
 
             return filtedTables.map( table =>
-                <div className="p-1 border-1 m-1 pointer shadow-blur shadow-hover" onClick={ () => { filterAdd(table) } }>
+                <div key={ table.table_id } className="p-1 border-1 m-1 pointer shadow-blur shadow-hover" onClick={ () => { filterAdd(table) } }>
                     <span className="p-0-5">{ table.table_name }</span>
                 </div>
             )
@@ -221,8 +227,76 @@ export default ( props ) => {
 
     const fieldDisselecting = ( field ) => {
         const newSelectedFields = selectedFields.filter( f => f.field_id != field.field_id );
+        const newParams = params.filter( f => f.field_id != field.field_id )
         setSelectedFields( [...newSelectedFields] )
+        setParams(newParams)
     }
+
+    const generateParams = () => {
+        const paramNames = params.map( field => {
+            const splitted_name = field.field_name.split(' ');
+            return `:${splitted_name.join('_')}`
+        })
+
+        const paramAlias = params.map( field => {
+            return `:${ field.field_alias }`
+        })
+
+        return {
+            display: '/' + paramNames.join('/'),
+            url: '/' + paramAlias.join('/'),
+        }
+    }
+
+    const addOrRemoveFromURLParams = ( e, field ) => {
+        e.preventDefault()
+        if( params.indexOf( field ) != -1 ){
+            const newParams = params.filter( f => f.field_id != field.field_id )
+            setParams(newParams)
+
+        }else{
+            setParams([ ...params, field ])
+        }
+    }
+
+    const addCustomFields = () => {
+        const newFieldAlias = auto_id()
+        const cusField = {
+            name: "Trường mới",
+            field_alias: newFieldAlias,
+            fomular: ""
+        }
+        setCustomFields([...customFields, cusField])
+    }
+
+    const updateCustomField = ( field, field_type, value ) => {
+        field[ field_type ] = value
+        const newCustomFields = customFields.map( f => {
+            if( f.field_alias === field.field_alias ){
+                return field;
+            }else{
+                return f
+            }
+        })
+        setCustomFields( newCustomFields )
+    }
+
+    const updateField = ( field, field_type, value ) => {
+        field[ field_type ] = value
+        const newCustomFields = selectedFields.map( f => {
+            if( f.field_alias === field.field_alias ){
+                return field;
+            }else{
+                return f
+            }
+        })
+        setSelectedFields( newCustomFields )
+    }
+
+    /* Em da lo yeu nguoi khong thuong em */
+    /*
+        Chia cai chon bang voi chon truong ra troi oi
+    */
 
     return(
         <div className="fixed-default z-index-11 fullscreen p-1">
@@ -240,11 +314,11 @@ export default ( props ) => {
                             <button onClick={ () => { setHeight(height != 0 ? 0 : 200 ) } } className="no-border w-100-pct text-center pointer block p-0-5 text-16-px">{ api.type.label }</button>
                         </div>
                         <div className="fill-available flex flex-wrap">
-                            <div className="w-50-pct">
+                            <div className="w-max-content">
                                 <span className="text-16-px block p-1">Proxy: <b>{ api.url.proxy }</b></span>
                             </div>
-                            <div className="w-50-pct">
-                                <span className="text-16-px block p-1">URL: <b>{ api.url.url }</b></span>
+                            <div className="w-max-content">
+                                <span className="text-16-px block p-1">URL: <b>{ api.url.url + generateParams().display }</b></span>
                             </div>
                         </div>
                     </div>
@@ -265,7 +339,7 @@ export default ( props ) => {
                     <div className="flex w-100-pct flex-no-wrap p-0-5">
                         <div className="fill-available flex flex-no-wrap scroll-x">
                             { selectedTables.map( table =>
-                                <div className="p-1 w-max-content border-1 m-1 pointer shadow-blur shadow-hover" onClick={ () => { filterRemove(table) } }>
+                                <div key={ table.table_id } className="p-1 w-max-content border-1 m-1 pointer shadow-blur shadow-hover" onClick={ () => { filterRemove(table) } }>
                                     <span className="p-0-5">{ table.table_name }</span>
                                 </div>
                             )}
@@ -297,13 +371,58 @@ export default ( props ) => {
                                 </div>
                                 <div className="w-50-pct p-1 h-fit overflow" style={{ height: "400px" }}>
                                     { selectedFields.map( field =>
-                                        <div key={field.field_id} className="m-t-1 pointer" onClick={ () => { fieldDisselecting( field ) } }>
+                                        <div key={field.field_id} className="m-t-1 pointer"
+                                            onClick={ () => { fieldDisselecting( field ) } }
+                                            onContextMenu={ (e) => { addOrRemoveFromURLParams( e, field ) } }
+                                        >
                                             <span className="block hover text-16-px p-1 w-100-pct bg-white shadow-blur">{ field.field_name }</span>
                                         </div>
                                     ) }
                                 </div>
                             </div>
                             <hr className="border-1-top"/>
+
+                            <div className="w-100-pct scroll-x">
+                                <div className="flex flex-no-wrap">
+                                { selectedFields.map( field =>
+                                    <div key={field.field_id} className="project-card border-1">
+                                        <span className="block hover text-16-px p-1 w-100-pct bg-white border-1-bottom">{ field.field_name }</span>
+                                        <div>
+                                            <span className="block hover text-16-px p-1 w-100-pct bg-white border-1-bottom">{ field.field_data_type }</span>
+                                            <input type="text" className="no-border p-1"
+                                                onChange={ (e) => { updateField( field, "custom_alias", e.target.value ) } }
+                                            />
+                                        </div>
+                                    </div>
+                                ) }
+
+                                {
+                                    customFields.map( field =>
+                                        <div key={field.field_alias} className="project-card border-1">
+                                            <div className="flex flex-end border-1-bottom">
+                                                <input className="block hover text-16-px p-1 w-100-pct bg-white no-border" type="text"
+                                                    value={ field.field_name }
+                                                    onChange={ (e) =>{ updateCustomField( field, "field_name", e.target.value ) } }
+                                                />
+                                                <div className="flex flex-middle">
+                                                    <img className="w-24-px block m-0-5" src="/assets/icon/cross-error.png"/>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <input type="text" className="no-border p-1"
+                                                    value={ field.fomular }
+                                                    onChange={ (e) =>{ updateCustomField( field, "fomular", e.target.value ) } }
+                                                />
+                                            </div>
+                                        </div>
+                                ) }
+
+                                    <div className="project-card border-1 flex flex-middle">
+                                        <button onClick={ addCustomFields } className="bold m-0-5 text-24-px no-border bg-green white border-radius-50-pct pointer" style={{ width: "32px", height: "32px" }}>+</button>
+                                    </div>
+
+                                </div>
+                            </div>
                         </div>
 
                         : null

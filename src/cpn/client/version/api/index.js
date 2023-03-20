@@ -53,6 +53,18 @@ export default (props) => {
         })
     }, [collections])
 
+    const filtingApi = () => {
+        let result = []
+        if( filter.value != null ){
+            result = collection[filter.value];
+        }else{
+            const rooms = [ "get", "post", "put", "delete" ]
+            rooms.map( room =>{
+                result = [ ...result, ...collection[room] ]
+            })
+        }
+        return result
+    }
 
     const createApiCollection = () => {
 
@@ -81,7 +93,7 @@ export default (props) => {
     }
 
     const pickCollection = ( collection ) => {
-        setCollection( collection )
+        setCollection( {...collection} )
     }
 
     const nameSwitch = () => {
@@ -130,6 +142,17 @@ export default (props) => {
                 return newCollection;
             }else{
                 return col
+            }
+        })
+        setCollections( newCollections )
+    }
+
+    const updateCollections = ( col ) => {
+        const newCollections = collections.map( _col => {
+            if( _col.collection_id == col.collection_id ){
+                return col
+            }else{
+                return _col
             }
         })
         setCollections( newCollections )
@@ -219,18 +242,11 @@ export default (props) => {
                         </div>
 
                         <hr className="block border-1-top"/>
-                        { filter.value ?
                             <div className="block">
-                                { collection[filter.value] ? collection[filter.value].map( api =>
-                                    <ApiCard  _api={ api } collection={ collection }/>
-                                ): null }
+                                { filtingApi().map( api =>
+                                    <ApiCard key={ api.url.url }  _api={ api } collection={ collection } setCollections={ updateCollections }/>
+                                ) }
                             </div>
-                        :
-                            <div>
-                                <span className="block text-20-px">{ "ALL" }</span>
-                            </div>
-                        }
-
 
                         </div>
                     : null }
