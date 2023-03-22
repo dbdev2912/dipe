@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router()
-const { mysql } = require('../Connect/conect');
+const { mysql, mongo } = require('../Connect/conect');
 
 const { TableController } = require('../controller/table-controller');
 const { TablesController } = require('../controller/tables-controller');
@@ -480,4 +480,84 @@ router.post('/:table_id/data/input', ( req, res ) => {
         }
     })
 })
+
+const getCurrentValue = ( field_alias, callback ) => {
+    let current = 0;
+    mongo( dbo => {
+        dbo.collection(`auto_increment`).findOne({ field_alias }, (err, result) => {
+            if( result ){
+                current = result.current;
+                dbo.collection(`auto_increment`).updateOne({ field_alias }, { $set: { current: current + 1 } }, (err, result) => {
+                    callback({ current })
+                })
+            }
+            else{
+                dbo.collection(`auto_increment`).insertOne({ field_alias, current: 1 }, (err, result) => {
+                    callback({ current })
+                })
+            }
+        })
+    })
+}
+
+router.get('/create/auto/increment/template/:field_alias', (req, res) => {
+    const { field_alias } = req.params;
+    getCurrentValue( field_alias, ({ current }) => {
+        const number = current;
+
+        const query = `
+            SELECT * FROM FIELDS WHERE FIELD_ALIAS = '${field_alias}'
+        `;
+
+        mysql( query, (fields) => {
+            const field = fields[0];
+            const props = JSON.parse(field.field_props)
+            let result = props.props.PATTERN;
+            if( result ){
+                const today = new Date();
+                const date = today.getDate();
+                const month = today.getMonth() + 1;
+                const year = today.getFullYear();
+                result = result.replace("[DD]", date);
+                result = result.replace("[MM]", month);
+                result = result.replace("[YYYY]", year);
+                const numberPlaces = [];
+                for (let i = 0; i < result.length; i++) {
+                    if (result[i] === '[') {
+                        var temp = ""
+                        for (let j = i + 1; j < result.length; j++) {
+                            if (result[j] === 'N' && result[j] !== ']') {
+                                temp += result[j];
+                            } else {
+                                if (result[j] === ']') {
+                                    numberPlaces.push(temp);
+                                    i = j;
+                                    temp = ""
+                                }
+                            }
+                        }
+                    }
+                }
+                const places = numberPlaces.map(place => {
+                    const placeLength = place.length;
+                    numberLength = number.toString().length;
+                    let header = "";
+                    for (let i = 0; i < placeLength; i++) {
+                        header += "0";
+                    }
+                    const result = header.slice(0, placeLength - numberLength) + number.toString();
+                    return { place, value: result };
+                })
+                for (let i = 0; i < places.length; i++) {
+                    const { place, value } = places[i];
+                    result = result.replace(`[${place}]`, value)
+                }
+                res.send(200, { result });
+            }else{
+                res.send(200, { result: current });
+            }
+        })
+    })
+})
+
 module.exports = { router }

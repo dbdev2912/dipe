@@ -115,4 +115,34 @@ router.delete('/api', ( req, res ) => {
     })
 })
 
+router.get(`/api/input/info/:id_str`, (req, res) => {
+
+    const { id_str } = req.params;
+    mongo( dbo => {
+        dbo.collection('apis').findOne({ "url.id_str": id_str }, (err, result) => {
+            const api = result;
+            if( api && api.status ){
+                const _api = {...api};
+                delete _api.fields;
+                delete _api.constraints;
+                delete _api.tables;
+                const { fields, tables } = api;
+                const rawConstraints = tables.map( tb => tb.constraint )
+                const constraints = []
+                for( let i =0; i < rawConstraints.length ; i++){
+                    let constr = rawConstraints[i]
+                    if( constr!= undefined && constr.length > 0 ){
+                        constraints.push( ... constr)
+                    }
+                }
+                
+                res.status(200).send({ success: true, fields, constraints, api: _api })
+
+            }else{
+                res.status(404).send({ success: false, content: "404 page not found" })
+            }
+        })
+    })
+})
+
 module.exports = router;

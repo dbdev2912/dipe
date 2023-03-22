@@ -37,6 +37,21 @@ class TablesController {
             }
         })
     }
+    getFieldsbyRelatedField = (field_id, callback) => {
+        const query = `
+        SELECT * FROM fields WHERE table_id in
+            (
+            SELECT table_id FROM fields WHERE field_id = ${ field_id }
+            );
+        `;
+        mysql( query, (result) => {
+            if( result != undefined ){
+                callback({ success: true, fields: result })
+            }else{
+                callback({ success: false })
+            }
+        })
+    }
 
     getAllUsingCredentialString = ( credential_string ,callback ) => {
         const query = `

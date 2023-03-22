@@ -1,5 +1,10 @@
 const { mysql, mongo } = require('../Connect/conect');
+const { TablesController } = require('../controller/tables-controller');
+/*=======================================================================*/
 
+const controller = new TablesController()
+
+/*============================== GET ====================================*/
 const getDataFromMongo = (dbo, tables, index, data, callback ) => {
     if( index === tables.length ){
         callback({ data })
@@ -173,12 +178,11 @@ const getRequest = (req, tables, fields, url, customFields, callback ) => {
                     constraints.push(...constrs);
                 }
             }
-            // callback( constraints )
             mergeData( tables, data, 0, undefined, ({ result }) => {
 
                 dataFilterByConstraints( result, tables, constraints, 0, ({ data }) => {
-
                     const uniqueData = removeDuplicate(data);
+
                     if( fields != undefined && fields.length > 0 ){
                         const finalData = uniqueData.map( data => {
                             const newData = {};
@@ -262,15 +266,118 @@ const getRequest = (req, tables, fields, url, customFields, callback ) => {
 }
 
 
+/*============================== POST ====================================*/
+
+const insertDataToTablesOneByOne = ( tables, data, index, callback ) => {
+    if( tables.length === index ){
+        callback({ data: "Thành công nhe quí dị" })
+    }else{
+        const table = tables[index];
+        const { constraint, table_id, fields } = table;
+        const _fields = fields;
+        const _constraint = constraint;
+
+        const criteria = [{
+            field: "table_id",
+            value: table_id,
+            fomula: "="
+        }]
+        controller.getone( criteria, ( result ) => {
+            const { success } = result;
+            if( success ){
+                const tableController = result.table;
+                tableController.getFields( ({ success, fields }) => {
+
+                    if( success ){
+                        const insertData = {}
+                        fields.map( field => {
+                            const _field = _fields.filter( f => f.field_id == field.field_id )[0];
+                            const { constraints } = _field
+                            const fk = constraints.filter( c => c.constraint_type == "fk" );
+                            if( constraints != undefined && constraints.length > 0 && fk.length > 0 ){
+                                controller.getFieldsbyRelatedField( fk[0].reference_on, (result) => {
+                                    const relatedFields = result.fields;
+
+                                    const ref_field = relatedFields.filter( f => f.field_id == fk[0].reference_on )[0]
+                                    console.log(ref_field)
+                                    insertData[ field.field_alias ] = data[ ref_field.field_alias ]  ? data[ ref_field.field_alias ] : data[ _field.field_alias ]
+                                })
+
+                            }else{
+                                const { field_alias } = field;
+                                insertData[ field_alias ] = data[ field_alias ]
+                            }
+                        })
+                        console.log( insertData )
+                        tableController.insert( insertData, ({ success, content }) => {
+
+                            if( success ){
+                                insertDataToTablesOneByOne(tables, data, index + 1, callback )
+                            }else{
+                                callback({ data: content })
+                            }
+                        })
+                    }
+                })
+            }else{
+                insertDataToTablesOneByOne(tables, data, index + 1, callback )
+            }
+        })
+    }
+}
+
+const sortTableBasedOnKey = ( tables ) => {
+    const pkOnly = tables.filter( tb => {
+        const { constraint } = tb;
+        const fk = constraint.filter( c => c.constraint_type == "fk" );
+        return fk.length > 0 ? false : true
+    })
+
+    const fkOnly = tables.filter( tb => {
+        const { constraint } = tb;
+        if( constraint && constraint.length > 0 && constraint.length %2 == 0 ){
+            const fk = constraint.filter( c => c.constraint_type == "fk" );
+            const pk = constraint.filter( c => c.constraint_type == "fk" );
+
+            let valid = true
+            for( let i = 0 ; i < fk.length; i++ ){
+                const key = fk[i]
+                const corespondKey = pk.filter( k => k.field_id == key.field_id );
+                if( corespondKey.length == 0 ){
+                    valid = false
+                }
+            }
+            return valid;
+        }else{
+            return false
+        }
+    })
+    const pkOnlyAndfkOnly = [ ...pkOnly, ...fkOnly ]
+    const mixedKey = tables.filter( tb => pkOnlyAndfkOnly.indexOf(tb) == -1 )
+    return [ ...pkOnly,  ...mixedKey, ...fkOnly ]
+}
+
+
+const postRequest = (req, tables, fields, callback ) => {
+    const { data } = req.body;
+    console.log(data)
+    insertDataToTablesOneByOne( sortTableBasedOnKey(tables), data, 0, (result) => {
+        callback(result)
+    })
+}
+
+/*============================== ROUTES ====================================*/
 const apiResolving = (req, api, callback) => {
     const { tables, fields, type, url, customFields } = api;
     switch (type.value) {
         case "get":
             getRequest(req, tables, fields, url, customFields, callback );
             break
-
+        case "post":
+            postRequest(req, tables, fields, callback );
+            break;
         default:
-            callback({ msg: "None can hide" })
+            callback({ data: "None can hide" })
             break;
     }
 }

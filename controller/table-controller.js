@@ -119,7 +119,7 @@ class TableController {
                     return callback({ success: false })
                 }
             })
-        }
+        }        
 
         createConstraint = ( {
             constraint_type,
@@ -156,7 +156,6 @@ class TableController {
 
         connect = ( callback ) => {
             mongo( dbo => {
-                console.log(dbo)
                 const col = dbo.collection( this.table_alias );
                 callback({ success: true, col });
             })

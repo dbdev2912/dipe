@@ -34,7 +34,6 @@ router.get(`/:page_id`, (req, res) => {
 
 router.post(`/add`, (req, res) => {
     const { data } = req.body;
-    console.log(data)
     mongo((dbo) => {
         dbo.collection("json").insertOne(data, (err, result) => {
             res.send({ success: true, content: "SUCCESSFULY INSERTED A NEW PAGE" })
