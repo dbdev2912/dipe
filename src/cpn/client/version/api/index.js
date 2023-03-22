@@ -116,8 +116,13 @@ export default (props) => {
         })
     }
     const createAPI = () => {
+        const _filter = filter;
+        if( !_filter.value ){
+            _filter.value = "get"
+        }
         dispatch({
             type: "setAddApiBox",
+            payload: { filter: _filter }
         })
     }
 

@@ -11,7 +11,7 @@ import {
 import "../css/index.scss";
 
 import { Login, SignUp, SignOut } from './auth';
-import { Home, Projects, SuProjects, SuProject, SuUsers, SuUser, Version, TableInput } from './client';
+import { Home, Projects, SuProjects, SuProject, SuUsers, SuUser, Version, TableInput, APIPostInput } from './client';
 
 function App() {
     const dispatch = useDispatch()
@@ -59,6 +59,7 @@ function App() {
                 <Route exac path="/su/user/:credential_string" element = { <SuUser /> } />
                 <Route exac path="/su/project/:project_id/version/:version_id" element = { <Version /> } />
                 <Route exac path="/su/project/:project_id/version/:version_id/table/:table_id/input" element = { <TableInput /> } />
+                <Route exac path="/su/api/post/input/:id_str" element={ <APIPostInput /> } />
             </Routes>
         </Router>
     </React.StrictMode>

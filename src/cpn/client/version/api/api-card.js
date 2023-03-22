@@ -7,6 +7,7 @@ export default ( props ) => {
     const [ api, setApi ] = useState(_api);
 
     const { unique_string, proxy } = useSelector( state => state );
+    const { openTab } = useSelector( state => state.functions );
     const [ height, setHeight ] = useState(0);
     const [ apiData, setApiData ] = useState([])
 
@@ -89,7 +90,11 @@ export default ( props ) => {
 
         })
     }
-    
+
+    const redirectToInput = () => {
+        openTab(`/su/api/post/input/${ api.url.id_str }`)
+    }
+
 
     return(
         <div className="m-t-1">
@@ -141,7 +146,14 @@ export default ( props ) => {
                     <div className="m-t-1">
 
                         <div className="w-100-pct m-t-1 flex flex-end">
+                        { api.type && api.type.value == "get" ?
                             <button onClick={ callApi } className="upper pointer block w-max-content white text-center p-t-0-5 p-b-0-5 p-l-1 p-r-1 m-l-1 no-border bg-gray">Xem dữ liệu</button>
+                                : null
+                        }
+                        { api.type && api.type.value == "post" ?
+                            <button onClick={ redirectToInput } className="upper pointer block w-max-content white text-center p-t-0-5 p-b-0-5 p-l-1 p-r-1 m-l-1 no-border bg-green">Nhập dữ liệu</button>
+                                : null
+                        }
                             <button onClick={ removeApi } className="upper pointer block w-max-content white text-center p-t-0-5 p-b-0-5 p-l-1 p-r-1 m-l-1 no-border bg-crimson">Xóa API</button>
                         </div>
                     </div>

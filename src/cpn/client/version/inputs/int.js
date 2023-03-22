@@ -11,6 +11,7 @@ export default ( props ) => {
     const [ fields, setFields ] = useState([]);
     const [ height, setHeight ] = useState(0);
     const [ keyField, setKeyField ] = useState("")
+
     useEffect(() => {
         if( field.constraints && field.constraints.length > 0 ){
             const fks = field.constraints.filter( c => c.constraint_type === "fk" );
@@ -29,13 +30,23 @@ export default ( props ) => {
                 })
             })
         }
+        if( field.props.props.AUTO_INCREMENT ){
+            fetch(`${ proxy }/api/${ unique_string }/table/create/auto/increment/template/${ field.field_alias }`)
+            .then( res => res.json() ) .then( ({ result }) => {
+                const auto_id = result;
+                setCurrent(auto_id)
+                changeTrigger(field, auto_id)
+                /* LATENCY BUG */
+            })
+        }
     }, [])
 
     const fieldChangeData = (e) => {
-        const { value } = e.target;
-        changeTrigger( field, value.slice(0, field.props.LENGTH) )
-        setCurrent( value.slice(0, field.props.LENGTH ))
-
+        if( !field.props.props.AUTO_INCREMENT ){
+            const { value } = e.target;
+            changeTrigger( field, value.slice(0, field.props.LENGTH) )
+            setCurrent( value.slice(0, field.props.LENGTH ))
+        }
     }
 
     const blurTrigger = (e) => {
@@ -72,7 +83,7 @@ export default ( props ) => {
                     <span className="block text-16-px">{ field.field_name }</span>
                 </div>
                 <div className="m-t-0-5">
-                    <input type="number"
+                    <input type={ field.props.props.AUTO_INCREMENT ?"text" : "number" }
                         className="p-t-0-5 p-b-0-5 p-l-1 text-16-px block w-100-pct border-1"
                         placeholder="" onChange={ fieldChangeData } value={ current }
                         />

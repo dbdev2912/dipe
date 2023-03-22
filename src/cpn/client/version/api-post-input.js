@@ -3,8 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { Navbar, Horizon } from '../../navbar';
 
-/* Multiple fk data conflict while chosing different pair of value */
-
 import {
     Varchar, Text, Int,
     DateInput, TimeInput, DateTimeInput,
@@ -14,20 +12,22 @@ import {
 export default () => {
     const dispatch = useDispatch();
 
-    const{ project_id, version_id, table_id } = useParams()
+    const{ id_str } = useParams()
 
     const { urls, bottomUrls } = useSelector( state => state.navbarLinks.su )
     const { dateGenerator, autoLabel, openTab } = useSelector( state => state.functions )
     const { navState, unique_string, proxy } = useSelector( state => state );
 
-    const [ table, setTable ] = useState({})
+    const [ api, setApi ] = useState({})
+    const [ tables, setTables ] = useState({})
     const [ fields, setFields ] = useState([]);
     const [ data, setData ] = useState({});
+    const [ pKconstraints, setPKConstraints ] = useState([])
 
     useEffect( () => {
-        fetch(`${ proxy }/api/${ unique_string }/table/${ table_id }/fields`).then( res => res.json() )
+        fetch(`${ proxy }/api/${ unique_string }/apis/api/input/info/${ id_str }`).then( res => res.json() )
         .then( res => {
-            const { success, content, fields, table, constraints } = res;
+            const { success, fields, tables, constraints, api } = res;
             const formatedFields = fields.map( f => {
                 const props = JSON.parse(f.field_props);
                 f.props = props;
@@ -38,8 +38,9 @@ export default () => {
                 return f
             })
             const primaryKey = constraints.filter(constr => constr.constraint_type == "pk")
-            table.primaryKey = primaryKey;
-            setTable(table)
+            setPKConstraints(pKconstraints)
+            setTables(tables)
+            setApi( api )
             setFields( formatedFields )
         })
     }, [])
@@ -65,16 +66,17 @@ export default () => {
     }
 
     const submit = () => {
+        console.log( data )
         if( nullCheck(data) ){
-            fetch(`${ proxy }/api/${ unique_string }/table/${ table_id }/data/input`, {
+            fetch(api.fullurl, {
                 method: "POST",
                 headers: {
                     "content-type": "application/json"
                 },
                 body: JSON.stringify({ data })
             }).then( res => res.json() ).then( res => {
-                const { success, content } = res;
-                alert( content )
+                const { success, data } = res;
+                alert( data )
             })
         }else{
             alert("Some unnullable fields are missing data!")
@@ -91,7 +93,7 @@ export default () => {
                     {/* VERSION INFO */}
 
                     <div className="w-50-pct mg-auto p-1 bg-white">
-                        <span className="block text-32-px text-center p-0-5">{ table.table_name }</span>
+                        <span className="block text-32-px text-center p-0-5">{ api.name }</span>
                         { fields.map( field =>
                             <React.StrictMode key={field.field_id}>
                                 { field.field_data_type == "VARCHAR" ?

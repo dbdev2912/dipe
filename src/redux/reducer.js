@@ -13,6 +13,7 @@ const initState = {
 
     addConstraintBox: false,
     addApi: false,
+    apiAddFilter: {},
     defaultField: {},
     collection: {},
     auth: {
@@ -47,7 +48,7 @@ export default ( state = initState, action ) => {
             return {...state, addConstraintBox: !state.addConstraintBox }
             break;
         case "setAddApiBox":
-            return {...state, addApi: !state.addApi }
+            return {...state, addApi: !state.addApi, apiAddFilter: action.payload.filter }
 
         case "setDefaultField":
             return setDefaultField( state, action )

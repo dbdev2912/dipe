@@ -18,7 +18,7 @@ export default () => {
 
     const { urls, bottomUrls } = useSelector( state => state.navbarLinks.su )
     const { dateGenerator, autoLabel, openTab } = useSelector( state => state.functions )
-    const { navState, unique_string, proxy, addConstraintBox, addApi } = useSelector( state => state );
+    const { navState, unique_string, proxy, addConstraintBox, addApi, apiAddFilter } = useSelector( state => state );
 
     const [ project, setProject ] = useState({})
     const [ version, setVersion ] = useState({})
@@ -444,7 +444,7 @@ export default () => {
              }
 
              { addApi ?
-                 <AddApi version={ version } project_id={ project_id } tables={ tables }/>
+                 <AddApi version={ version } project_id={ project_id } tables={ tables } addApiFilter={ apiAddFilter }/>
                  : null
               }
         </div>

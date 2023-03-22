@@ -1,8 +1,8 @@
 export default [
-    { id: 1, name: "INT", type: "int", props: [{ name: "AUTO_INCREMENT", label: "Tự động tăng (AUTO_INCREMENT)", type: "bool" }] },
-    { id: 2, name: "INT UNSIGNED", type: "int", props: [{ name: "AUTO_INCREMENT", label: "Tự động tăng (AUTO_INCREMENT)", type: "bool" }]},
-    { id: 3, name: "BIG INT", type: "int", props: [{ name: "AUTO_INCREMENT", label: "Tự động tăng (AUTO_INCREMENT)", type: "bool" }] },
-    { id: 4, name: "BIG INT UNSIGNED", type: "int", props: [{ name: "AUTO_INCREMENT", label: "Tự động tăng (AUTO_INCREMENT)", type: "bool" }]},
+    { id: 1, name: "INT", type: "int", props: [{ name: "AUTO_INCREMENT", label: "Tự động tăng (AUTO_INCREMENT)", type: "bool" }, { name: "PATTERN", type: "text", label: "Định dạng" }] },
+    { id: 2, name: "INT UNSIGNED", type: "int", props: [{ name: "AUTO_INCREMENT", label: "Tự động tăng (AUTO_INCREMENT)", type: "bool" }, { name: "PATTERN", type: "text", label: "Định dạng" }]},
+    { id: 3, name: "BIG INT", type: "int", props: [{ name: "AUTO_INCREMENT", label: "Tự động tăng (AUTO_INCREMENT)", type: "bool" }, { name: "PATTERN", type: "text", label: "Định dạng" }] },
+    { id: 4, name: "BIG INT UNSIGNED", type: "int", props: [{ name: "AUTO_INCREMENT", label: "Tự động tăng (AUTO_INCREMENT)", type: "bool" }, { name: "PATTERN", type: "text", label: "Định dạng" }]},
     { id: 5, name: "BOOL", type: "bool", props: [ { name: "IF_TRUE", label: "Giá trị đúng", type: "text" }, { name: "IF_FALSE", label: "Giá trị sai", type: "text" }  ] },
     { id: 6, name: "DECIMAL", type: "floating-point",
         props: [ { name: "LENGTH", label: "Độ dài tối đa", type: "int" }, { name: "DELIMITER", label: "Vị trí dấu chấm", type: "int" } ] }, /* dec(5,2) ~ 999.99 */
