@@ -268,9 +268,26 @@ const getRequest = (req, tables, fields, url, customFields, callback ) => {
 
 /*============================== POST ====================================*/
 
-const insertDataToTablesOneByOne = ( tables, data, index, callback ) => {
+const getFieldsbyRelatedField = ( tables, field_id ) => {
+    const field = tables.filter( tb => {
+
+        const _fields = tb.fields;
+        const field_existed = _fields.filter( f => f.field_id == field_id )
+        if( field_existed.length > 0 ){
+            return true
+        }
+        else{
+            return false
+        }
+    })
+    const { table_id } = field[0];
+    const table = tables.filter( tb => tb.table_id == table_id )[0]
+    return table.fields;
+}
+
+const insertDataToTablesOneByOne = ( tables, version_tables, data, index, insert, callback ) => {
     if( tables.length === index ){
-        callback({ data: "Thành công nhe quí dị" })
+        callback({ success: true, data: "Thành công nhe quí dị" })
     }else{
         const table = tables[index];
         const { constraint, table_id, fields } = table;
@@ -282,6 +299,7 @@ const insertDataToTablesOneByOne = ( tables, data, index, callback ) => {
             value: table_id,
             fomula: "="
         }]
+
         controller.getone( criteria, ( result ) => {
             const { success } = result;
             if( success ){
@@ -295,32 +313,49 @@ const insertDataToTablesOneByOne = ( tables, data, index, callback ) => {
                             const { constraints } = _field
                             const fk = constraints.filter( c => c.constraint_type == "fk" );
                             if( constraints != undefined && constraints.length > 0 && fk.length > 0 ){
-                                controller.getFieldsbyRelatedField( fk[0].reference_on, (result) => {
-                                    const relatedFields = result.fields;
 
-                                    const ref_field = relatedFields.filter( f => f.field_id == fk[0].reference_on )[0]
-                                    console.log(ref_field)
-                                    insertData[ field.field_alias ] = data[ ref_field.field_alias ]  ? data[ ref_field.field_alias ] : data[ _field.field_alias ]
-                                })
+                                const relatedFields = getFieldsbyRelatedField( version_tables, fk[0].reference_on );
+                                const ref_field = relatedFields.filter( f => f.field_id == fk[0].reference_on )[0]
+
+                                insertData[ field.field_alias ] = data[ ref_field.field_alias ] ? data[ ref_field.field_alias ] : data[ _field.field_alias ]
+
+
 
                             }else{
                                 const { field_alias } = field;
                                 insertData[ field_alias ] = data[ field_alias ]
                             }
                         })
-                        console.log( insertData )
-                        tableController.insert( insertData, ({ success, content }) => {
 
-                            if( success ){
-                                insertDataToTablesOneByOne(tables, data, index + 1, callback )
-                            }else{
-                                callback({ data: content })
-                            }
-                        })
+                        console.log("\nInsert to: " + table.table_name)
+                        console.log(insertData);
+
+                        if( insert ){
+
+                            tableController.insert( insertData, ({ success, content }) => {
+
+                                if( success ){
+                                    insertDataToTablesOneByOne(tables, version_tables, data, index + 1, insert, callback )
+                                }else{
+
+                                    callback({ success: false, data: content })
+                                }
+                            })
+                        }else{
+                            tableController.checkInsertValidation( insertData, ({ success, content }) => {
+
+                                if( success ){
+                                    insertDataToTablesOneByOne(tables, version_tables, data, index + 1, insert, callback )
+                                }else{
+
+                                    callback({ success: false, data: content })
+                                }
+                            })
+                        }
                     }
                 })
             }else{
-                insertDataToTablesOneByOne(tables, data, index + 1, callback )
+                insertDataToTablesOneByOne(tables, data, index + 1, insert, callback )
             }
         })
     }
@@ -337,7 +372,7 @@ const sortTableBasedOnKey = ( tables ) => {
         const { constraint } = tb;
         if( constraint && constraint.length > 0 && constraint.length %2 == 0 ){
             const fk = constraint.filter( c => c.constraint_type == "fk" );
-            const pk = constraint.filter( c => c.constraint_type == "fk" );
+            const pk = constraint.filter( c => c.constraint_type == "pk" );
 
             let valid = true
             for( let i = 0 ; i < fk.length; i++ ){
@@ -358,12 +393,160 @@ const sortTableBasedOnKey = ( tables ) => {
 }
 
 
+const getTableFields = ( tables, index, callback ) => {
+    if( index === tables.length ){
+        callback({ tablesDetail: tables })
+    }else{
+        tables[index].getFields(( { success, fields } ) => {
+            if( success ){
+                tables[index]["fields"] = fields.map( field => field.get() );
+                tables[index].getConstraints(({ constraints, success }) => {
+                    if( success ){
+                        tables[index]["constraint"] = constraints.map( constr => constr.get() )
+                    }
+                    getTableFields( tables, index + 1 , callback)
+                })
+            }else{
+                getTableFields( tables, index + 1 , callback)
+            }
+        })
+    }
+}
+
 const postRequest = (req, tables, fields, callback ) => {
     const { data } = req.body;
-    console.log(data)
-    insertDataToTablesOneByOne( sortTableBasedOnKey(tables), data, 0, (result) => {
-        callback(result)
+    const sortedTables = sortTableBasedOnKey(tables)
+    // console.log(data)
+    //
+    // for( let i = 0; i < tables.length; i++ ){
+    //     const { fields } = tables[i]
+    //     console.log( `\nTable: ${ tables[i].table_alias } -  ${ tables[i].table_name }` )
+    //     for( let j = 0; j < fields.length; j++ ){
+    //         const field = fields[j]
+    //         console.log( `${field.field_alias} - ${ field.field_name }` )
+    //     }
+    // }
+    const version_id = tables[0].version_id;
+
+    controller.getall_based_on_version_id( version_id , ({ success, tables }) => {
+        getTableFields( tables, 0, ({ tablesDetail }) => {
+            const version_tables = tablesDetail
+
+            insertDataToTablesOneByOne( sortedTables, version_tables, data, 0, true, (result) => {
+                callback(result)
+            })
+        })
     })
+}
+
+
+
+/*============================== PUT ====================================*/
+
+const updateDataTableByTable = ( tables, index, data, params, paramsFilter, callback ) => {
+    if( tables.length === index ){
+        callback({ data: "Thành công nhe quí dị" })
+    }else{
+        const table = tables[index];
+        const { constraint, table_id, fields, table_name } = table;
+        const criteria = [{
+            field: "table_id",
+            value: table_id,
+            fomula: "="
+        }]
+        controller.getone(criteria, (result) => {
+            const tableController = result.table;
+            const pks = constraint.filter( c => c.constraint_type == "pk" );
+            const query = {}
+            pks.map( pk => {
+                f_alias = getFieldAlias(tables, pk.field_id);
+                query[ f_alias ] = params[ f_alias ]
+                if( params[f_alias] == undefined){
+                    const par = paramsFilter.filter( p => p.field_alias == f_alias )[0];
+                    query[ f_alias ] = par.value
+                }
+            })
+            const newValue = {}
+
+            fields.map( field => {
+                newValue[field.field_alias] = data[ field.field_alias ]
+
+                if( data[ field.field_alias ] == undefined ){
+                    const par = paramsFilter.filter( p => p.field_alias == field.field_alias )[0]
+                    newValue[field.field_alias] = par.value
+                }
+            })
+            tableController.update(query, newValue, ({ success, content }) => {
+                // console.log( content )
+                if( success ){
+                    updateDataTableByTable( tables, index + 1, data, params, paramsFilter, callback )
+                }else{
+                    callback({ success, content })
+                }
+            })
+        })
+    }
+}
+
+const putRequest = (req, tables, fields, url, callback ) => {
+    const { params } = url;
+    const paramsURL = url.url;
+    const { data } = req.body;
+    const splittedURL = req.url.split('/')
+    const splittedParams = paramsURL.split('/')
+
+    for( let i = 0; i < tables.length; i++ ){
+        const { fields } = tables[i]
+        console.log( `\nTable: ${ tables[i].table_alias } -  ${ tables[i].table_name }` )
+        for( let j = 0; j < fields.length; j++ ){
+            const field = fields[j]
+            console.log( `${field.field_alias} - ${ field.field_name }` )
+        }
+    }
+
+    if( params != undefined && params.length > 0 ){
+        const paramsFilter = params.map( field => {
+            const { field_alias } = field
+            return {
+                field_alias,
+                value: splittedURL[ splittedParams.indexOf( `:${ field_alias }` ) ]
+            }
+        })
+        relatedFields = params.map( field => {
+            const { constraints, field_alias } = field;
+            const fks = constraints.filter( c => c.constraint_type == "fk" );
+            const pks = constraints.filter( c => c.constraint_type == "pk" );
+            fks.map( fk => {
+                const _field_alias = getFieldAlias( tables, fk.reference_on );
+                if( field_alias != undefined ){
+                    paramsFilter.push({
+                        field_alias: _field_alias,
+                        value: splittedURL[ splittedParams.indexOf( `:${ field_alias }` ) ]
+                    })
+                }
+            })
+            pks.map( pk => {
+                const { field_id }  = pk;
+                tables.map( tb => {
+                    const { constraint } = tb;
+                    if( constraint && constraint.length > 0 ){
+                        const dependencedField = constraint.filter( c => c.constraint_type == "fk" && c.reference_on == field_id )
+                        if( dependencedField.length > 0 ){
+                            const  d_field_alias = getFieldAlias( tables, dependencedField[0].field_id )
+                            paramsFilter.push({
+                                field_alias: d_field_alias,
+                                value: splittedURL[ splittedParams.indexOf( `:${ field_alias }` ) ]
+                            })
+                        }
+                    }
+                })
+            })
+        })
+
+
+        updateDataTableByTable( tables, 0, data, params, paramsFilter, callback )
+
+    }
 }
 
 /*============================== ROUTES ====================================*/
@@ -376,6 +559,10 @@ const apiResolving = (req, api, callback) => {
         case "post":
             postRequest(req, tables, fields, callback );
             break;
+        case "put":
+            putRequest(req, tables, fields, url, callback );
+            break;
+
         default:
             callback({ data: "None can hide" })
             break;

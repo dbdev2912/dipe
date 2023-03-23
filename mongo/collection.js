@@ -325,7 +325,6 @@ class Collection {
 
 
     update = (criteria, newValue, callback ) => {
-
         this.find( criteria, ({ content, data }) => {
             if( data.length > 0 ) {
                 this.col.update( criteria, { $set: { ...newValue } }, ( err, result ) =>  {

@@ -119,7 +119,7 @@ class TableController {
                     return callback({ success: false })
                 }
             })
-        }        
+        }
 
         createConstraint = ( {
             constraint_type,
@@ -215,7 +215,29 @@ class TableController {
             })
         }
 
+        checkInsertValidation = ( data, callback ) => {
+            this.getConstraints( ({ success, constraints }) => {
+                this.connect( ({ success, col }) => {
+
+                    if( !success ){
+                        callback( { success, content: `Failed to connect to collection: ${ this.table_name }` } )
+                    }else{
+                        const collection = new Collection( col );
+                        if( constraints ){
+                            collection.insert( data, constraints, ({ success, content })=> {
+                                callback({ success, content })
+                            } )
+                        }else{
+                            callback( {success: true, content: "Valid data"} )
+                        }
+                    }
+                })
+            })
+        }
+
         update = (oldValue, newValue, callback) => {
+            console.log( oldValue )
+            console.log(newValue)
             this.getConstraints( ({ success, constraints }) => {
                 this.connect( ({ success, col }) => {
                     if( !success ){
