@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import GetMethod from './methods/get';
 import PostMethod from './methods/post';
+import PutMethod from './methods/put';
 
 
 export default ( props ) => {
@@ -29,6 +30,10 @@ export default ( props ) => {
             }
             { addApiFilter&&addApiFilter.value === "post" ?
                 <PostMethod closeDialog={ closeDialog } version={ version } project_id={ project_id } tables={ tables } />
+                    : null
+            }
+            { addApiFilter&&addApiFilter.value === "put" ?
+                <PutMethod closeDialog={ closeDialog } version={ version } project_id={ project_id } tables={ tables } />
                     : null
             }
         </div>

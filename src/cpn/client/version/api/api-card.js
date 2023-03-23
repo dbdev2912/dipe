@@ -95,6 +95,33 @@ export default ( props ) => {
         openTab(`/su/api/post/input/${ api.url.id_str }`)
     }
 
+    const noParamsFilter = () => {
+        const { fields } = api;
+        const { params } = api.url;
+        const filtedFields = fields.filter( field => {
+            const fieldExisted = params.filter( f => f.field_id == field.field_id );
+            if( fieldExisted.length > 0 ){
+                return false
+            }else{
+                return true
+            }
+        });
+        return filtedFields;
+    }
+
+    const clipboardApiStructure = () => {
+        const params = noParamsFilter().map( field => {
+            return `"${ field.field_alias }": "",`
+        })
+        navigator.clipboard.writeText(`
+        {
+            "data" : {
+                ${ params.join('\n\t\t') }
+            }
+        }
+        `)
+        alert("Đã sao chép JSON")
+    }
 
     return(
         <div className="m-t-1">
@@ -138,11 +165,27 @@ export default ( props ) => {
                                 </tbody>
                         </table>
                         : null
-
                     }
                     </div>
                     : null
                 }
+                    { api.type && api.type.value == "put" ?
+                        <div className="m-t-1">
+                            <span className="text-16-px block"> Cấu trúc JSON </span>
+                            <div style={{ userSelect: "text" }}>
+                                <span className="text-16-px block m-l-1">{"{"}</span>
+                                    <span className="text-16-px block m-l-2">{"data: {"}</span>
+                                        {
+                                            noParamsFilter().map( field =>
+                                                <span className="text-16-px block m-l-3">{`"${ field.field_alias }": "", (${ field.field_name })`}</span>
+                                            )
+                                        }
+                                    <span className="text-16-px block m-l-2">{"}"}</span>
+                                <span className="text-16-px block m-l-1">{"}"}</span>
+                            </div>
+                        </div>
+                            : null
+                    }
                     <div className="m-t-1">
 
                         <div className="w-100-pct m-t-1 flex flex-end">
@@ -152,6 +195,10 @@ export default ( props ) => {
                         }
                         { api.type && api.type.value == "post" ?
                             <button onClick={ redirectToInput } className="upper pointer block w-max-content white text-center p-t-0-5 p-b-0-5 p-l-1 p-r-1 m-l-1 no-border bg-green">Nhập dữ liệu</button>
+                                : null
+                        }
+                        { api.type && api.type.value == "put" ?
+                            <button onClick={ clipboardApiStructure } className="upper pointer block w-max-content white text-center p-t-0-5 p-b-0-5 p-l-1 p-r-1 m-l-1 no-border bg-green">Copy JSON</button>
                                 : null
                         }
                             <button onClick={ removeApi } className="upper pointer block w-max-content white text-center p-t-0-5 p-b-0-5 p-l-1 p-r-1 m-l-1 no-border bg-crimson">Xóa API</button>

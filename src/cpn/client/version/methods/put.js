@@ -29,7 +29,7 @@ export default ( props ) => {
     const [ drop, setDrop ] = useState(false);
 
     const [ api, setApi ] = useState({
-        type: criterias[0],
+        type: criterias[2],
         url: {},
         name: "API mới nè"
     })
@@ -213,9 +213,32 @@ export default ( props ) => {
         }
     }
 
+    const pkExisted = (fk) => {
+        const { reference_on } = fk;
+        const pk = selectedFields.filter( field => field.field_id == reference_on )
+        if( pk != undefined && pk.length > 0 ){
+            return true
+        }
+        return false;
+    }
+
+
     const fieldSelecting = ( field ) => {
-        if( selectedFields.indexOf( field) == -1 ){
-            setSelectedFields( [ ...selectedFields, field ] )
+        const fieldConstraints = field.constraints;
+        if( fieldConstraints ){
+
+            const fieldFK = fieldConstraints.filter( fc => fc.constraint_type == "fk" );
+            if( fieldFK != undefined && fieldFK.length > 0 && pkExisted(fieldFK[0]) ){
+                alert("Trường này bị zô hiệu vì khóa chính của nó đang trong danh sách được chọn!")
+            }else{
+                if( selectedFields.indexOf( field) == -1 ){
+                    setSelectedFields( [ ...selectedFields, field ] )
+                }
+            }
+        }else{
+            if( selectedFields.indexOf( field) == -1 ){
+                setSelectedFields( [ ...selectedFields, field ] )
+            }
         }
     }
 
@@ -353,7 +376,7 @@ export default ( props ) => {
                         </div>
                     </div>
                     <div className="p-1 fill-available">
-                        { api.type.value == "get" ?
+
                         <div>
                             <div className="flex flex-no-wrap h-fit">
                                 <div className="w-50-pct p-1 h-fit overflow" style={{ height: "400px" }}>
@@ -380,52 +403,8 @@ export default ( props ) => {
                                 </div>
                             </div>
                             <hr className="border-1-top"/>
-
-                            <div className="w-100-pct scroll-x">
-                                <div className="flex flex-no-wrap">
-                                { selectedFields.map( field =>
-                                    <div key={field.field_id} className="project-card border-1">
-                                        <span className="block hover text-16-px p-1 w-100-pct bg-white border-1-bottom">{ field.field_name }</span>
-                                        <div>
-                                            <span className="block hover text-16-px p-1 w-100-pct bg-white border-1-bottom">{ field.field_data_type }</span>
-                                            <input type="text" className="no-border p-1"
-                                                onChange={ (e) => { updateField( field, "custom_alias", e.target.value ) } }
-                                            />
-                                        </div>
-                                    </div>
-                                ) }
-
-                                {
-                                    customFields.map( field =>
-                                        <div key={field.field_alias} className="project-card border-1">
-                                            <div className="flex flex-end border-1-bottom">
-                                                <input className="block hover text-16-px p-1 w-100-pct bg-white no-border" type="text"
-                                                    value={ field.field_name }
-                                                    onChange={ (e) =>{ updateCustomField( field, "field_name", e.target.value ) } }
-                                                />
-                                                <div className="flex flex-middle">
-                                                    <img className="w-24-px block m-0-5" src="/assets/icon/cross-error.png"/>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <input type="text" className="no-border p-1"
-                                                    value={ field.fomular }
-                                                    onChange={ (e) =>{ updateCustomField( field, "fomular", e.target.value ) } }
-                                                />
-                                            </div>
-                                        </div>
-                                ) }
-
-                                    <div className="project-card border-1 flex flex-middle">
-                                        <button onClick={ addCustomFields } className="bold m-0-5 text-24-px no-border bg-green white border-radius-50-pct pointer" style={{ width: "32px", height: "32px" }}>+</button>
-                                    </div>
-
-                                </div>
-                            </div>
                         </div>
 
-                        : null
-                        }
                     </div>
                 </div>
                 <div className="abs b-0 r-0 p-1">
