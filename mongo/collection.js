@@ -343,9 +343,15 @@ class Collection {
         })
     }
     delete = ( criteria, callback ) => {
-        this.col.remove(criteria, (err, result) => {
-            callback( { content: `SUCCESSFULLY DELETED DATA ` } )
+        console.log("\n")
+        console.log( criteria )
+        this.col.deleteMany(criteria, (err, result) => {
+            callback( {success: true,  content: `SUCCESSFULLY DELETED DATA ` } )
         })
+        // this.col.find({...criteria}).toArray( (err, result) => {
+        //     console.log(result)
+        //     callback( { success: true, content: `SUCCESSFULLY DELETED DATA ` } )
+        // })
     }
 }
 
