@@ -4,17 +4,18 @@ import { useDispatch, useSelector } from 'react-redux';
 import GetMethod from './methods/get';
 import PostMethod from './methods/post';
 import PutMethod from './methods/put';
+import DeleteMethod from './methods/delete';
 
 
 export default ( props ) => {
 
     const { version, project_id, tables, addApiFilter } = props;
     const dispatch = useDispatch()
+
     /* Em da lo yeu nguoi khong thuong em */
     /*
         Chia cai chon bang voi chon truong ra troi oi
     */
-
     const closeDialog = () => {
         dispatch({
             type: "setAddApiBox",
@@ -34,6 +35,10 @@ export default ( props ) => {
             }
             { addApiFilter&&addApiFilter.value === "put" ?
                 <PutMethod closeDialog={ closeDialog } version={ version } project_id={ project_id } tables={ tables } />
+                    : null
+            }
+            { addApiFilter&&addApiFilter.value === "delete" ?
+                <DeleteMethod closeDialog={ closeDialog } version={ version } project_id={ project_id } tables={ tables } />
                     : null
             }
         </div>
